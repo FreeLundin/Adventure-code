@@ -4,6 +4,7 @@ Intermediate/
 Saved/
 Binaries/
 .vscode/
+.vs/
 *.opensdf
 *.sdf
 *.suo
@@ -13,6 +14,10 @@ Binaries/
 *.xcodeproj
 *.xcworkspace
 *.xcuserstate
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
 # Mac specific
 .DS_Store
 # Windows thumbnail cache
@@ -22,6 +27,7 @@ Thumbs.db
 *.dll
 *.so
 *.dylib
+*.pdb
 # Auto-generated project files
 *.VC.db
 *.VC.opendb
