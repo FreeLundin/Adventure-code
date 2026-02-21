@@ -1,0 +1,34 @@
+# Unreal Engine generated files and folders
+DerivedDataCache/
+Intermediate/
+Saved/
+Binaries/
+.vscode/
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.userprefs
+*.idea/
+*.xcodeproj
+*.xcworkspace
+*.xcuserstate
+# Mac specific
+.DS_Store
+# Windows thumbnail cache
+Thumbs.db
+# Build results
+*.exe
+*.dll
+*.so
+*.dylib
+# Auto-generated project files
+*.VC.db
+*.VC.opendb
+# Ignore logs
+Logs/
+# Ignore any personal or local settings
+*.local
+
+# Ignore package restore data (caused earlier indexing error)
+Saved/Autosaves/PackageRestoreData.json
