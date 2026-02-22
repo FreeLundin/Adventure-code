@@ -18,23 +18,38 @@ Binaries/
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
 # Mac specific
 .DS_Store
+
 # Windows thumbnail cache
 Thumbs.db
+
 # Build results
 *.exe
 *.dll
 *.so
 *.dylib
 *.pdb
+
 # Auto-generated project files
 *.VC.db
 *.VC.opendb
+
 # Ignore logs
 Logs/
+
 # Ignore any personal or local settings
 *.local
 
 # Ignore package restore data (caused earlier indexing error)
 Saved/Autosaves/PackageRestoreData.json
+
+# Game Content - managed separately
+Content/
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+venv/
+.env
