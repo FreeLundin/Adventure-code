@@ -6,8 +6,10 @@ public class Adventure : ModuleRules
 {
 	public Adventure(ReadOnlyTargetRules Target) : base(Target)
 	{
+		// Optimized for Live Coding: Use explicit PCHs
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-	
+		CppStandard = CppStandardVersion.Latest;
+		
 		PublicDependencyModuleNames.AddRange(new string[] { 
 			"Core", 
 			"CoreUObject", 
@@ -24,6 +26,23 @@ public class Adventure : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] { 
 			"ControlRig"
+		});
+
+		// Public include paths for Live Coding recompilation
+		PublicIncludePaths.AddRange(new string[] {
+			"Adventure/Public",
+			"Adventure/Public/Core",
+			"Adventure/Public/Character",
+			"Adventure/Public/GAS",
+			"Adventure/Public/UI"
+		});
+
+		// Private include paths for internal compilation
+		PrivateIncludePaths.AddRange(new string[] {
+			"Adventure/Private",
+			"Adventure/Private/Core",
+			"Adventure/Private/Character",
+			"Adventure/Private/GAS"
 		});
 
 		// Uncomment if you are using Slate UI
