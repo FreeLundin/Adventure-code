@@ -34,10 +34,6 @@
 			"Enabled": false
 		},
 		{
-			"Name": "Fab",
-			"Enabled": false
-		},
-		{
 			"Name": "AnimationWarping",
 			"Enabled": true
 		},
