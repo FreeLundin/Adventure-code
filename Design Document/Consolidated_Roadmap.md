@@ -13,6 +13,7 @@ What this file contains
 Consolidation notes
 - The `Rageborn_*` documents were reviewed and relevant items were migrated into `Adventure_Roadmap.md` and `Product_Backlog.md`.
 - Legacy items that were not migrated are retained in `Rageborn_Roadmap.md` for historical context; if any of these become active, convert them into issues (see `Product_Backlog.md`) and add links in `PROJECT_STATUS.md`.
+- Feb 21, 2026 update: GAS foundation and Mover2 variant are now implemented in C++; see `PROJECT_STATUS.md` and `IMPLEMENTATION_STATUS.md`.
 
 Action items
 1. Convert any remaining `Rageborn_*` TODOs into issues using the `Documentation/REQUEST_TEMPLATE.md` and tag with the appropriate `phase` and `milestone`.

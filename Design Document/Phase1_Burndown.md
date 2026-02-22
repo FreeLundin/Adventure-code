@@ -2,6 +2,13 @@
 
 Purpose: break Phase 1 (foundations) into a short, testable burndown so we can reach a reproducible acceptance playtest.
 
+Status update (Feb 21, 2026)
+- C++ foundation complete; live coding build succeeds.
+- GAS foundation implemented (PlayerState ASC, AdventureAttributeSet, tags, ability stubs).
+- Default attributes GameplayEffect added (UGE_AdventureDefaultAttributes).
+- Mover2 character variant added (ACBP_AdventureCharacter_Mover).
+- Enhanced Input assets, camera toggle, HUD bindings, and animation retarget still pending.
+
 Duration: 2 weeks (Sprint 1), deliverable: playable character with three camera modes, basic HUD, and `RitualEnergy` AttributeSet exposed to UI.
 
 Owners: engineer/locomotion (primary), engineer/ui (HUD), engineer/animation (retarget fallback)

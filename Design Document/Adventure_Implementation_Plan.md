@@ -8,11 +8,17 @@ Overview
 - Core identity: Jessie "Nola" Savage explores Old Nola, battling occult enemies using hybrid combat (firearms/melee/artifacts), managing Ritual Energy (0-100), and collecting artifacts tied to the Seven African Powers (Orishas).
 - Primary goals: multi-perspective camera (TopDown/TP/FP via mouse wheel), Ritual Energy + GAS pipeline, motion-matching integration, artifact system with Seven Orishas, one multi-phase boss with ritual puzzle mechanics.
 
+Current status (Feb 21, 2026)
+- GAS foundation complete in C++ (PlayerState-owned ASC, AdventureAttributeSet, gameplay tags, ability stubs).
+- Default attributes GameplayEffect added (UGE_AdventureDefaultAttributes).
+- Mover2 character variant added (ACBP_AdventureCharacter_Mover).
+- Live coding build succeeds.
+
 Milestones & Phases
 
 - Phase 1 — Foundations (Weeks 1–3)
-  - Tasks: UE5.7 project setup, input system + camera toggle (mouse wheel: TopDown/ThirdPerson/FirstPerson), core movement (walk/sprint/jump/vault/mantle), basic HUD (Health, RitualEnergy prominent, Stamina, Ammo), `AS_RitualEnergy` AttributeSet (0-100 with decay -1/sec after 8s).
-  - Deliverables: Playable Jessie character with 3 camera modes functional; AttributeSet implemented with decay and exposed to HUD; small animation set retargeted to project skeleton.
+  - Tasks: UE5.7 project setup, input system + camera toggle (mouse wheel: TopDown/ThirdPerson/FirstPerson), core movement (walk/sprint/jump/vault/mantle), basic HUD (Health, RitualEnergy prominent, Stamina, Ammo), RitualEnergy AttributeSet (0-100 with decay -1/sec after 8s), Mover2 variant validation.
+  - Deliverables: Playable Jessie character with 3 camera modes functional; AttributeSet implemented with decay and exposed to HUD; Mover2 pawn variant functional; small animation set retargeted to project skeleton.
   - Owner: `engineer/locomotion`
   - Acceptance: Camera toggle works via mouse wheel, HUD shows Ritual Energy prominently, character can vault/mantle basic obstacles.
 

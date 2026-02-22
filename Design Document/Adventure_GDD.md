@@ -1,102 +1,363 @@
 # Adventure
 Game Design Document
 
-## STAGE ONE: CONCEPT
+## 1. Game Summary
+Adventure is a supernatural action-adventure set in Old Nola, where Jessie “Nola” Savage uncovers occult mysteries, battles corrupted entities, and channels Ritual Energy to activate powerful abilities tied to the Seven African Powers.
 
-### Game Summary
-- One-line: Adventure is a hybrid action-adventure / supernatural horror in Old Nola, where Jessie “Nola” Savage explores occult mysteries, collects artifacts tied to the Seven African Powers, and uses Ritual Energy to perform powerful ritual abilities.
-- Tone: Gritty, kinetic, and atmospheric; blend of exploration-driven discovery and tense, tactical combat.
-- Platform & Prototype target: PC (UE5.7) — 3-month prototype, single-player (mobile TBD).
+Tone blends gritty atmosphere, kinetic traversal, and ritual-driven combat.
 
-### Elevator Pitch
-- Traverse Old Nola’s haunted streets, gather Ritual Energy through combat and investigation, and activate ritual artifacts to defeat occult bosses and unlock hidden lore.
+## 2. Elevator Pitch
+Explore haunted districts of Old Nola, gather Ritual Energy through combat and investigation, and activate ancient artifacts to defeat occult bosses and unlock hidden lore.
 
-### Main Character
-Jessie (Nola) Savage — an occult scholar/adventurer driven by a personal quest; customizable look planned.
+## 3. Main Character
+Jessie “Nola” Savage — an occult scholar-adventurer with deep ritual knowledge and a personal stake in the supernatural events unfolding across Old Nola.
 
-### Setting & Lore
-Old Nola overlays ancient ritual geographies. Cabals, bayou crypts, and broken pacts form the narrative backbone. Lore is revealed through journals, ritual diagrams, NPCs, and environment storytelling.
+## 4. Setting & Lore
+Old Nola overlays ancient ritual geographies. Cabals, bayou crypts, and broken pacts shape the world. Lore is delivered through journals, ritual diagrams, NPC encounters, and environmental storytelling.
 
-### Player Perspective
-Multi-perspective camera: Top-Down / Third-Person / First-Person — switchable via mouse wheel. Modes tuned for traversal, combat, and immersion respectively.
+## 5. Player Perspective
+A multi-perspective camera system:
 
-### Player Experience Goals
-- Alternating tension (horror) and kinetic combat moments.
-- Satisfying traversal and discovery (Tomb Raider-style exploration).
-- Boss battles combining ritual puzzles and combat.
-- Guns are useful but not always decisive — artifacts and rituals matter.
+Top-Down — tactical exploration
 
----
+Third-Person — traversal and combat
 
-## STAGE TWO : SPECIFICATIONS
+First-Person — immersion and investigation
 
-### Core Loop
-Explore → Discover clues & resources → Encounter enemies → Fight/stealth/solve → Earn Ritual Energy → Spend Ritual Energy & Artifacts → Progress / Unlock
+Mouse wheel cycles modes.
 
-### Ritual Energy (tunable)
-- Range: 0–100 (keep name `Ritual Energy`).
-- Example gains: Light hit +3, Heavy/headshot +8, Stealth takedown +10, Solve major ritual +20, Parry +12.
-- Passive decay: −1 / sec after 8s out of combat (configurable).
-- Uses: Minor Surge (30), Ritual Flash (60), Signature Ritual (100).
+## 6. Player Experience Goals
+Rhythms of tension to release (horror to combat)
 
-### Combat
-- Full GAS integration: abilities as `UGameplayAbility` with costs via `UGameplayEffect`.
-- Hybrid combat: firearms (limited), melee (combos & parries), occult abilities, stealth.
+Satisfying traversal and discovery
 
-### Exploration & Traversal
-- Parkour-lite: vault, mantle, rope-swing, climb; boat traversal for bayou areas.
+Boss battles mixing ritual puzzles with action
 
-### Puzzles
-- Voodoo sigil decoding, ritual component placement, chant/rhythm mechanics.
+Firearms useful but rituals define mastery
 
-### Boss Battles
-- Multi-phase with ritual puzzle phases and environmental weaknesses.
+## 7. Core Gameplay Loop
+Explore → Discover → Encounter → Fight/Stealth/Solve → Earn Ritual Energy → Spend on Ritual Abilities and Artifacts → Progress
 
-### UI / HUD
-- Clean HUD with minimal/full toggles. Key elements: Health, Ritual Energy (prominent), Ammo, Stamina.
+## 8. Ritual Energy System
+Properties
+Range: 0–100
 
-### Controls
-- Mouse wheel toggles camera (TopDown → ThirdPerson → FirstPerson). Default bindings: LMB light, RMB heavy, Shift dodge, Q block, E interact, F ritual.
+Passive decay: -1/sec after 8 seconds out of combat
 
----
+Stored in a dedicated AttributeSet
 
-## Artifacts — The Seven (Gameplay & Lore)
+Gains
+Light hit: +3
 
-### Overview
-Jessie collects seven legendary artifacts tied to the Seven African Powers (Orishas). Each artifact grants passive and active bonuses, amplifies the Signature Ritual, and helps defeat specific boss mechanics.
+Heavy/headshot: +8
 
-> Cultural note: The Orishas are sacred figures. Represent them respectfully; include cultural review and credit sources.
+Stealth takedown: +10
 
-### The Seven Artifacts & Effects
-- **Elegua — Crossroads Talisman**: cooldown reduction; Signature offers a phase-choice (offense/defense/utility).
-- **Yemaya — Oceanic Chalice**: life-on-hit passive; Signature spawns a healing tide and can cleanse certain curses.
-- **Oshun — Mirror of Rivers**: charm/proc chance; Signature pacifies or converts swarms.
-- **Shango — Thunderbrand**: increases damage/crit; Signature: lightning tempest.
-- **Obatala — White Scepter**: defense/resilience; Signature: protective sanctum.
-- **Oya — Stormblade**: movement/knockback and area control; Signature: localized storm.
-- **Ogun — Ironforge Cleaver**: armor penetration; Signature: focused guard-breaking strike.
+Major ritual solved: +20
 
-### Implementation Hooks
-- Artifacts as DataAsset `ArtifactData` with fields: `Name`, `Orisha`, `BaseEffects`, `SignatureModifier`, `UpgradeTiers`.
-- GAS: artifacts grant passive `GameplayEffects` and modify `GA_Ritual_Signature` (via tags or swapping effect specs).
+Parry: +12
 
----
+Uses
+Minor Surge (30)
 
-## Motion-Matching Pipeline (high-level)
-- Curate free animation packs, retarget to project skeleton, extract per-frame features (root vel, joint velocities, contact flags), build CSV manifest, index runtime DB, and integrate with AnimGraph. A montage fallback is acceptable while the database integration matures.
+Ritual Flash (60)
 
----
+Signature Ritual (100)
 
-## Prototype Milestones (3-month plan)
-- Sprint 1: UE5.7 setup, movement, camera toggle, basic HUD, `RitualEnergy` AttributeSet.
-- Sprint 2: GAS base abilities, Ritual Energy flow, Grunt + Cultist.
-- Sprint 3: Motion matching import & test; puzzle prototype; boss scaffold.
-- Sprint 4: Boss finalization, VFX/SFX, mobile plan, playtest & tuning.
+## 9. Combat System
+Hybrid of melee, firearms, stealth, and ritual abilities.
 
----
+Technical Foundation
+Fully implemented using GAS
 
-## Acceptance Criteria
-- Camera toggle (TopDown/TP/FP) works via mouse wheel.
-- GAS pipeline with `RitualEnergy` working and at least 2 Ritual abilities.
-- Motion-matching dataset integrated or montage fallback operational.
-- One multi-phase boss demonstrating ritual puzzle + combat.
+Abilities as UGameplayAbility
+
+Costs/cooldowns via GameplayEffect
+
+Motion-warping melee
+
+Player Actions
+Light Attack
+
+Heavy Attack
+
+Parry
+
+Dodge
+
+Signature Ritual
+
+Firearms (limited ammo)
+
+Stealth takedowns
+
+## 10. Exploration & Traversal
+Vault
+
+Mantle
+
+Climb
+
+Rope swing
+
+Bayou boat traversal
+
+Traversal interacts with stamina and sometimes Ritual Energy.
+
+## 11. Puzzle Design
+Voodoo sigil decoding
+
+Ritual component placement
+
+Chant/rhythm timing
+
+Environmental ritual circuits
+
+## 12. Boss Battles
+Multi-phase encounters combining:
+
+Ritual puzzle phases
+
+Environmental hazards
+
+Combat phases with artifact weaknesses
+
+Interrupt windows requiring parry or Ritual Flash
+
+## 13. UI / HUD
+Minimalist HUD:
+
+Health
+
+Ritual Energy
+
+Stamina
+
+Ammo
+
+Artifact indicator
+
+## 14. Controls
+LMB: Light attack
+
+RMB: Heavy attack
+
+Shift: Dodge
+
+Q: Block/Parry
+
+E: Interact
+
+F: Ritual ability
+
+Mouse Wheel: Camera mode toggle
+
+## 15. Artifacts — The Seven
+Artifacts tied to the Seven African Powers (Orishas).
+Each grants passive bonuses, active abilities, and modifies the Signature Ritual.
+
+Cultural note: Represent Orishas respectfully; consult cultural experts.
+
+Artifact List
+Elegua — Crossroads Talisman: cooldown reduction; flexible Signature modes
+
+Yemaya — Oceanic Chalice: life-on-hit; healing tide
+
+Oshun — Mirror of Rivers: charm/pacify; swarm control
+
+Shango — Thunderbrand: crit/damage; lightning tempest
+
+Obatala — White Scepter: defense; protective sanctum
+
+Oya — Stormblade: mobility/knockback; localized storm
+
+Ogun — Ironforge Cleaver: armor break; guard-shattering strike
+
+Implementation
+Artifacts implemented as DataAssets with:
+
+Name
+
+Orisha
+
+BaseEffects
+
+SignatureModifier
+
+UpgradeTiers
+
+## 16. Enemies (Required by Coursera Assignment)
+(Aligned with the checklist in your active tab)
+
+### 16.1 Enemy Types
+Grunt — “Hollowed”
+Appearance: Emaciated humanoids with ritual scars and flickering ember-eyes.
+
+Behavior: Swarm in groups, rush the player, low health.
+
+Attacks: Claw swipe (short range), lunge (medium range).
+
+Role: Early-game pressure and Ritual Energy farm.
+
+Cultist — “Binder”
+Appearance: Hooded figures with bone charms and ritual masks.
+
+Behavior: Mid-range casters; maintain distance.
+
+Attacks: Hex bolts, ritual snares, stagger curses.
+
+Role: Forces player to close distance or use cover.
+
+Bayou Beast — “Mireborn”
+Appearance: Large, moss-covered creature with glowing runes.
+
+Behavior: Slow but tanky; area denial.
+
+Attacks: Ground slam, poison spit, swamp pull.
+
+Role: Environmental hazard plus mini-boss.
+
+Boss — “The Broken Loa”
+Appearance: Massive spectral entity bound by corrupted sigils.
+
+Behavior: Multi-phase; alternates between ritual puzzle and combat.
+
+Attacks: Soul lash, ritual storms, summon adds.
+
+Role: Capstone encounter demonstrating all systems.
+
+## 17. Enemy Combat Mechanics
+Attack Ranges:
+
+Hollowed: 1–3m
+
+Binder: 8–12m
+
+Mireborn: 2–6m
+
+Boss: arena-wide abilities
+
+Damage Tuning:
+
+Hollowed: low
+
+Binder: medium burst
+
+Mireborn: high, slow
+
+Boss: variable per phase
+
+Behavior Systems:
+
+Aggro radius
+
+Flanking logic
+
+Ritual channeling (Binders/Boss)
+
+Interrupt windows (parry or Ritual Flash)
+
+## 18. Levels (Required by Coursera Assignment)
+(Matches the assignment’s “Enemies and Levels” section)
+
+### 18.1 Level 1 — Old Nola Streets
+Theme: Abandoned French-Creole district under ritual corruption.
+
+Flow:
+
+Start at safehouse
+
+Explore alleyways
+
+Encounter Hollowed swarm
+
+Solve sigil door puzzle
+
+Mini-boss: Mireborn
+
+Rewards:
+
+Elegua Fragment
+
+Ritual Energy caches
+
+Journal pages
+
+### 18.2 Level 2 — Bayou Crypt
+Theme: Flooded ritual catacombs.
+
+Flow:
+
+Boat traversal
+
+Stealth section with Binders
+
+Multi-room ritual circuit puzzle
+
+Boss arena prep
+
+Rewards:
+
+Artifact upgrade materials
+
+Yemaya Fragment
+
+Rare Ritual Components
+
+### 18.3 Level 3 — The Broken Sanctum (Boss Level)
+Theme: Collapsing ritual nexus.
+
+Flow:
+
+Environmental hazards
+
+Ritual puzzle phase
+
+Combat phase
+
+Signature Ritual finale
+
+Rewards:
+
+Full Signature Ritual unlock
+
+Major lore reveal
+
+## 19. Illustrative Examples
+(Required by assignment)
+
+Example 1 — Combat Loop:
+Player parries a Hollowed, gains Ritual Energy, then uses Ritual Flash to stagger a Binder before finishing with a Signature Ritual.
+
+Example 2 — Level Flow:
+In the Bayou Crypt, the player solves a sigil circuit puzzle to drain water, opening a path to the boss arena.
+
+Example 3 — Artifact Synergy:
+With Shango’s Thunderbrand equipped, heavy attacks generate lightning arcs that chain between clustered enemies.
+
+## 20. Design Justification
+(Required by assignment)
+
+Audience
+Fans of action-adventure games with supernatural themes (e.g., God of War, Control, Tomb Raider).
+
+Market Fit
+The ritual-energy combat loop and artifact system differentiate the game from typical melee-focused action titles.
+
+Technical Constraints
+UE5.7 with GAS ensures scalable combat.
+
+Motion matching is optional; montage fallback ensures prototype viability.
+
+Multi-perspective camera supports accessibility and player preference.
+
+## 21. Acceptance Criteria
+Camera toggle functional
+
+RitualEnergy AttributeSet working
+
+At least two Ritual abilities implemented
+
+Motion-matching or montage fallback
+
+One multi-phase boss with ritual puzzle and combat

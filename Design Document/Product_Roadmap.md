@@ -2,6 +2,12 @@
 
 Scope: 3-month prototype (12 weeks) focusing on core systems, motion-matching integration, and an artifact-driven boss encounter.
 
+Current status (Feb 21, 2026)
+- GAS foundation complete (PlayerState-owned ASC, AdventureAttributeSet, tags, ability stubs).
+- Default attributes GameplayEffect added (UGE_AdventureDefaultAttributes).
+- Mover2 character variant implemented (ACBP_AdventureCharacter_Mover).
+- Live coding build succeeds.
+
 Timeline (12 weeks)
 
 - Weeks 1–2 (Phase 1 — Foundations)
@@ -22,6 +28,7 @@ Timeline (12 weeks)
 Milestones
 
 - M1 (End Week 2): Playable character with 3 camera modes, RitualEnergy AttributeSet, HUD, and sample level.
+- M1 update: GAS foundation and Mover2 variant are in place; camera toggle, HUD bindings, and Enhanced Input assets still pending.
 - M2 (End Week 4): Two functional abilities with cost and simple enemy; RitualEnergy validated in combat.
 - M3 (End Week 8): Motion-matching prototype integrated and improving transition behavior for core actions.
 - M4 (End Week 10): Artifact implemented and boss encounter demonstration.

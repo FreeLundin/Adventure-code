@@ -15,32 +15,44 @@ Epic: Core Foundations
   - Priority: High
   - Description: Configure engine, enable GAS-related plugins, baseline project settings, CI notes.
   - Acceptance: Project opens in UE5.7; required plugins enabled.
+  - Status: DONE
 
 - PF-002: Input system & PlayerController
   - Priority: High
   - Description: Default input mappings and PlayerController that routes inputs to character and camera toggles.
   - Acceptance: Mapped inputs appear in `DefaultInput.ini`; PlayerController handles inputs in PIE.
+  - Status: IN PROGRESS (Enhanced Input assets pending)
 
 - PF-003: Camera system (TopDown/Third/First)
   - Priority: High
   - Description: Camera components, toggle logic, smooth transitions and mode-specific control tuning.
   - Acceptance: Player can cycle camera modes with mouse wheel; controls remain usable.
+  - Status: PENDING
 
 - PF-004: Character locomotion
   - Priority: High
   - Description: Walk, run, sprint, jump, dodge; movement state machine and AnimBP linkage.
   - Acceptance: Movement actions respond; states seen in AnimBP.
+  - Status: PENDING
+
+- PF-005: Mover2 character variant + GAS foundation
+  - Priority: High
+  - Description: Add Mover2 pawn, PlayerState-owned ASC, AdventureAttributeSet, gameplay tags, and default attributes GE.
+  - Acceptance: Mover2 variant spawns, GAS initializes, attributes replicate.
+  - Status: DONE
 
 Epic: GAS & Combat
 - GC-001: `AS_RitualEnergy` AttributeSet
   - Priority: High
   - Description: AttributeSet for RitualEnergy (0–100) with read/write API for abilities and effects.
   - Acceptance: Attribute exists and updates; HUD binding confirmed.
+  - Status: DONE (AdventureAttributeSet implemented)
 
 - GC-002: GA_LightAttack & GA_HeavyAttack
   - Priority: High
   - Description: Two basic abilities that consume RitualEnergy via GameplayEffects.
   - Acceptance: Abilities activate, apply effects, and consume RitualEnergy.
+  - Status: PENDING
 
 - GC-003: GA_Climb (ATS integration)
   - Priority: Medium

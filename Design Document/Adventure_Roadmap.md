@@ -25,3 +25,9 @@ Risks & mitigations:
 - Asset retargeting: prefer consistent rig naming or use Control Rig retarget maps early.
 
 Owners: assign feature owners per sprint in the issue tracker and link PRs to roadmap items.
+
+Current status (Feb 21, 2026)
+- GAS foundation complete (PlayerState ASC, AdventureAttributeSet, tags, ability stubs).
+- Default attributes GameplayEffect added.
+- Mover2 character variant implemented.
+- Enhanced Input assets, camera toggle, and HUD bindings still pending.

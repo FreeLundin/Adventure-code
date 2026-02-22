@@ -1,46 +1,75 @@
 # Product Backlog: GAS End-to-End Implementation
 
-This document tracks the execution of the Gameplay Ability System migration.
+This document tracks the execution of the Gameplay Ability System (GAS) migration for Adventure.
 
 ## Epic 1: Foundation & Resources (The Engine)
-*Goal: Ensure the character functions physically with resource constraints.*
+Goal: Ensure characters initialize with a PlayerState-owned ASC and core attributes.
 
-- [x] **01. Update Initialization**
-    - [ ] Action: Edit `GE_DefaultStats` (Content/GAS).
-    - [ ] Task: Add Modifiers: `Stamina = 100`, `MaxStamina = 100`.
-- [ ] **02. Create Jump Cost**
-    - [ ] Action: Create `GE_JumpCost` (Content/GAS).
-    - [ ] Task: Duration: `Instant`. Modifier: `Stamina` `Add` `-10.0`.
-- [ ] **03. Link Jump Cost**
-    - [ ] Action: Edit `GA_Jump`.
-    - [ ] Task: Set "Cost Gameplay Effect Class" to `GE_JumpCost`.
-- [ ] **04. Create Sprint Speed Effect**
-    - [ ] Action: Create `GE_SprintModify`.
-    - [ ] Task: Duration: `Infinite`. Modifier: `CharacterMovement.MaxWalkSpeed` `Multiply` `1.5` (Note: Ensure MaxWalkSpeed attribute exists or simulate via loose tags). 
-    - *Correction:* Since GAS Attributes for movement don't exist yet, we will use a "Gameplay Tag" detection in the character tick, OR a simpler approach: Have the Ability simply Change the Walk Speed on Activation, and Reset it on End.
-- [ ] **05. Create Sprint Cost Effect**
-    - [ ] Action: Create `GE_SprintCost`.
-    - [ ] Task: Duration: `Has Duration` (or instant w/ period). Best Practice: Duration `Infinite`, Period `0.5s`. Modifier: `Stamina` `Add` `-5.0`.
-- [ ] **06. Create Sprint Ability**
-    - [ ] Action: Create `GA_Sprint`.
-    - [ ] Logic:
-        - On Activate: Check Stamina > 0. Apply `GE_SprintModify` and `GE_SprintCost`.
-        - Wait for Input Release (Shift).
-        - On Release/Stamina<=0: Remove Effects. End Ability.
-- [ ] **07. Sprint Input**
-    - [ ] Action: `CBP_GAS_Character`.
-    - [ ] Task: Bind Shift -> Try Activate `GA_Sprint`.
-- [ ] **08. Regen Effect**
-    - [ ] Action: Create `GE_Regen`.
-    - [ ] Task: Duration: `Infinite`. Period `1.0s`. Modifier: `Stamina` `Add` `+5.0`.
-- [ ] **09. Passive Ability**
-    - [ ] Action: Create `GA_PassiveRegen`.
-    - [ ] Task: "Net Execution Policy": `Server Only`. On Activate: Apply `GE_Regen`.
-- [ ] **10. Regen Logic**
-    - [ ] Task: Add to `DefaultAbilities` in Character.
+- [x] **01. PlayerState ASC**
+  - Action: Implement `AAdventurePlayerState` with replicated ASC.
+  - Status: DONE
 
-## Epic 2: Advanced Movement (The Feel)
-*(To be detailed after Epic 1 is complete)*
+- [x] **02. AttributeSet**
+  - Action: Implement `UAdventureAttributeSet` with Health, Stamina, RitualEnergy.
+  - Status: DONE
+
+- [x] **03. Default Attributes GE**
+  - Action: Create `UGE_AdventureDefaultAttributes` to set defaults.
+  - Status: DONE
+
+- [x] **04. Ability Stubs + Tags**
+  - Action: Implement `UGA_AdventureSprint`, `UGA_AdventureDodge`, `UGA_AdventureTraversal`, `UGA_AdventureInteract`.
+  - Status: DONE
+
+- [ ] **05. Hook Default Abilities in Blueprints**
+  - Action: Verify DefaultAbilities/DefaultAttributesEffect in both character BPs.
+  - Status: PENDING
+
+## Epic 2: Movement Abilities (The Feel)
+Goal: Stamina-driven movement abilities (sprint, dodge, jump) via GAS.
+
+- [ ] **06. Create Sprint Cost + Modify Effects**
+  - Action: Create `GE_SprintCost` and `GE_SprintModify` (stamina drain, speed change).
+  - Status: PENDING
+
+- [ ] **07. Implement GA_Sprint**
+  - Action: Ability applies sprint effects and ends on input release.
+  - Status: PENDING
+
+- [ ] **08. Implement GA_Dodge**
+  - Action: Ability applies stamina cost and triggers montage/root motion or mover action.
+  - Status: PENDING
+
+- [ ] **09. Optional GA_Jump**
+  - Action: Ability-driven jump cost (if desired for stamina gating).
+  - Status: PENDING
 
 ## Epic 3: Combat Loop (The Game)
-*(To be detailed after Epic 2 is complete)*
+Goal: Ritual Energy gain/spend abilities and core combat.
+
+- [ ] **10. GA_LightAttack / GA_HeavyAttack**
+  - Action: Implement melee abilities that grant Ritual Energy on hit.
+  - Status: PENDING
+
+- [ ] **11. GA_Parry / GA_Block**
+  - Action: Add parry/block abilities with Ritual Energy gain.
+  - Status: PENDING
+
+- [ ] **12. GE_RitualEnergyGain**
+  - Action: GameplayEffect(s) for +3/+8/+10/+12/+20 gains.
+  - Status: PENDING
+
+## Epic 4: UI Binding & Telemetry
+Goal: Live HUD binding and testing hooks.
+
+- [ ] **13. Bind HUD to AttributeSet**
+  - Action: Bind Health/Stamina/RitualEnergy to UMG.
+  - Status: PENDING
+
+- [ ] **14. Debug Hooks**
+  - Action: Optional console/debug utilities for testing attribute changes.
+  - Status: PENDING
+
+Notes
+- GAS is PlayerState-owned; both character variants call InitializeAbilitySystem on possession and replication.
+- Mover2 variant uses the same ASC and ability activation paths as the CMC character.
