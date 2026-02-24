@@ -157,6 +157,22 @@
 		{
 			"Name": "MoverAnimNext",
 			"Enabled": true
+		},
+		{
+			"Name": "AnimationBudgetAllocator",
+			"Enabled": true
+		},
+		{
+			"Name": "AnimToTexture",
+			"Enabled": true
+		},
+		{
+			"Name": "Locomotor",
+			"Enabled": true
+		},
+		{
+			"Name": "CurveExpression",
+			"Enabled": true
 		}
 	],
 	"EpicSampleNameHash": "1673045636"
