@@ -1,0 +1,36 @@
+{
+  "Blueprint": "AgentBehavior",
+  "Description": "Example Blueprint flow that checks model health and falls back to deterministic behavior if inference fails or exceeds latency budget.",
+  "Nodes": [
+    {
+      "Id": "CheckModelLoaded",
+      "Type": "Function",
+      "Action": "IsModelLoaded",
+      "OnFalse": "UseDeterministicFallback"
+    },
+    {
+      "Id": "RunModelInference",
+      "Type": "Function",
+      "Action": "RunInference",
+      "TimeoutMs": 50,
+      "OnFail": "UseDeterministicFallback",
+      "OnTimeout": "UseDeterministicFallback"
+    },
+    {
+      "Id": "ApplyAction",
+      "Type": "Function",
+      "Action": "ApplyModelAction",
+      "OnFail": "UseDeterministicFallback"
+    }
+  ],
+  "DeterministicFallback": {
+    "Type": "StateMachine",
+    "Version": "v1.0",
+    "Behavior": "FallbackPatrol",
+    "Description": "Simple deterministic patrol or cached action to ensure safe behavior when model is unavailable."
+  },
+  "Notes": [
+    "Record telemetry for each decision: action_id, agent_id, model_version, latency_ms, outcome.",
+    "Ensure Blueprint exposes a toggle 'AllowModelEdits' that must be explicitly enabled per developer for in-editor assistants."
+  ]
+}

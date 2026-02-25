@@ -131,7 +131,7 @@
 		},
 		{
 			"Name": "UE_MCP_AGENT_PLUGIN",
-			"Enabled": false,
+			"Enabled": true,
 			"SupportedTargetPlatforms": [
 				"Win64",
 				"Mac",
@@ -156,6 +156,43 @@
 		},
 		{
 			"Name": "MoverAnimNext",
+			"Enabled": true
+		},
+		{
+			"Name": "MLAdapter",
+			"Enabled": true
+		},
+		{
+			"Name": "NeuralMorphModel",
+			"Enabled": true
+		},
+		{
+			"Name": "NeuralRendering",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "NNERuntimeCoreML",
+			"Enabled": true
+		},
+		{
+			"Name": "LearningAgents",
+			"Enabled": true
+		},
+		{
+			"Name": "CameraCalibrationML",
+			"Enabled": true
+		},
+		{
+			"Name": "CQTestExperimental",
+			"Enabled": true
+		},
+		{
+			"Name": "MetasoundExperimental",
 			"Enabled": true
 		}
 	],

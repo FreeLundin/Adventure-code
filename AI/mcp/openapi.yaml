@@ -1,0 +1,40 @@
+openapi: 3.0.1
+info:
+  title: Adventure AI Model Control Plane
+  version: 1.0.0
+  description: |-
+    Minimal MCP spec for reporting telemetry and requesting latest model metadata.
+servers:
+  - url: https://mcp.example.com/api
+paths:
+  /telemetry:
+    post:
+      summary: "Report telemetry events from game clients"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: "Accepted"
+  /models/latest:
+    get:
+      summary: "Get metadata for the latest approved model version"
+      responses:
+        '200':
+          description: "Model metadata"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                  url:
+                    type: string
+                required:
+                  - version
+                  - url

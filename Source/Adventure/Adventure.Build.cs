@@ -21,7 +21,8 @@ public class Adventure : ModuleRules
 			"EnhancedInput",
 			"Mover",
 			"MotionWarping",
-			"UMG"
+			"UMG",
+            "UE_MCP_Plugin"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { 

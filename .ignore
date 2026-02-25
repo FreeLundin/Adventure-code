@@ -1,7 +1,16 @@
 /.git
+/.github
 /.vscode
+/AI
+/Backups
 /Content
 /DerivedDataCache
 /Design Document
+/Documentation
 /Intermediate
+/patches
 /Saved
+/scripts
+/Tools
+/Update_GASP
+/Plugins/UE_PAIRED_PROGRAMMER_PLUGIN/Intermediate

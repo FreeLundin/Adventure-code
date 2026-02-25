@@ -204,6 +204,35 @@ void ACBP_AdventureCharacter_Mover::RequestTraversalVault()
 	OnTraversalRequestVault();
 }
 
+void ACBP_AdventureCharacter_Mover::OnTraversalRequestVault_Implementation()
+{
+	// default native behaviour: forward to base character traversal query using forward direction
+	UE_LOG(LogTemp, Log, TEXT("[Traversal] Mover vault request"));
+	FVector Dir = GetActorForwardVector();
+	FS_TraversalCheckInputs Inputs = GetTraversalCheckInputs(Dir);
+	bool bTraversalCheckFailed = true;
+	bool bMontageSelectionFailed = true;
+	FS_TraversalCheckResult Result;
+	TryTraversalAction(Inputs, false, bTraversalCheckFailed, bMontageSelectionFailed, Result,
+		GetActorLocation(),
+		GetCapsuleComponent()->GetScaledCapsuleRadius(),
+		GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+		FVector::ZeroVector, FVector::ZeroVector,
+		FHitResult(), 0, 0.0, TArray<UAnimMontage*>());
+}
+
+void ACBP_AdventureCharacter_Mover::OnTraversalRequestMantle_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("[Traversal] Mover mantle request"));
+	// reuse same logic for now
+	OnTraversalRequestVault_Implementation();
+}
+
+void ACBP_AdventureCharacter_Mover::OnTraversalRequestClimb_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("[Traversal] Mover climb request"));
+	OnTraversalRequestVault_Implementation();
+}
 void ACBP_AdventureCharacter_Mover::RequestTraversalMantle()
 {
 	OnTraversalRequestMantle();

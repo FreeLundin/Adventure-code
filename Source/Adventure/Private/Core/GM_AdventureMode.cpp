@@ -7,6 +7,7 @@
 #include "Core/AdventurePlayerState.h"
 #include "Core/PC_AdventureController.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/WorldSettings.h" // needed for GetWorldSettings()
 #include "Curves/CurveFloat.h"
 #include "GameplayTagsManager.h"
 

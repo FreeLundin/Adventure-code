@@ -51,6 +51,11 @@ define a lightweight process for contributors.
 - Convert TODOs to issues with owners/estimates for clear accountability.
 - Runbooks need exact commands — vague instructions slow down on-call and handoffs.
 
+12) AI integration reference
+- See `Documentation/AIIntegrationGuide.md` for examples of loading models, running inference,
+  and wiring MCP telemetry. This guide is updated alongside the governance templates and
+  should be consulted whenever new ML models or runtimes are added to the project.
+
 These Governance rules are intentionally lightweight. If you want, I can add the `ISSUE_TEMPLATE.md`, `PULL_REQUEST_TEMPLATE.md`, and a `CODEOWNERS` file now.
 
 ``` 

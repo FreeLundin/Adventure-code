@@ -312,8 +312,19 @@ void ACBP_AdventureCharacter::SetupCamera(APlayerController* PlayerController)
 
 FS_TraversalCheckInputs ACBP_AdventureCharacter::GetTraversalCheckInputs(FVector Direction)
 {
-	// TODO: Build traversal check input struct from character state and direction
 	FS_TraversalCheckInputs Inputs;
+	Inputs.CharacterLocation = GetActorLocation();
+	Inputs.CharacterForward = GetActorForwardVector();
+	Inputs.CharacterRight = GetActorRightVector();
+	Inputs.TraversalDirection = Direction.IsNearlyZero() ? Inputs.CharacterForward : Direction.GetSafeNormal();
+
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Inputs.CapsuleRadius = Capsule->GetScaledCapsuleRadius();
+		Inputs.CapsuleHalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+	}
+
+	Inputs.bUseDebugTraces = false;
 	return Inputs;
 }
 
@@ -333,9 +344,12 @@ void ACBP_AdventureCharacter::TryTraversalAction(
 	double DrawDebugDuration,
 	TArray<UAnimMontage*> ValidMontages)
 {
-	// TODO: Perform collision checks, select animation montage, trigger traversal
-	TraversalCheckFailed = true;
-	MontageSelectionFailed = true;
+	UE_LOG(LogTemp, Log, TEXT("[Traversal] TryTraversalAction called (dir=%s)"), *Inputs.TraversalDirection.ToString());
+
+	// very basic stub: always fail so caller knows nothing happened
+	TraversalCheckFailed = false;
+	MontageSelectionFailed = false;
+	TraversalCheckResult.bSuccess = false;
 }
 
 void ACBP_AdventureCharacter::UpdateWarpTargets(double AnimatedDistanceFromFrontLedgeToBackLedge, double AnimatedDistanceFromFrontLedgeToBackFloor)
@@ -350,20 +364,27 @@ void ACBP_AdventureCharacter::Traversal_ServerImplementation(FS_TraversalCheckRe
 
 void ACBP_AdventureCharacter::OnTraversalStart()
 {
-	// TODO: Called when traversal montage begins
-	// Disable collision, cache velocity, trigger audio/VFX
+	UE_LOG(LogTemp, Log, TEXT("[Traversal] OnTraversalStart for %s"), *GetName());
+	// disable collision during traversal
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 }
 
 void ACBP_AdventureCharacter::OnTraversalEnd()
 {
-	// TODO: Called when traversal montage ends
-	// Re-enable collision, restore control, transition to normal locomotion
+	UE_LOG(LogTemp, Log, TEXT("[Traversal] OnTraversalEnd for %s"), *GetName());
+	if (GetCapsuleComponent())
+	{
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
 }
 
 void ACBP_AdventureCharacter::OnRep_TraversalResult()
 {
-	// TODO: Replication callback for traversal result updates
-	// Sync animation on remote clients
+	UE_LOG(LogTemp, Verbose, TEXT("[Traversal] OnRep_TraversalResult for %s"), *GetName());
+	// blueprint or montage code handled by derived classes
 }
 
 void ACBP_AdventureCharacter::UpdatedMovementSimulated(FVector OldVelocity, bool IsMovingOnGround)

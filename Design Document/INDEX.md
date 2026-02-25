@@ -10,7 +10,7 @@ quickly locate what you need.
 - `Adventure_Implementation_Plan.md` — Implementation breakdown and task templates.
 - `Product_Backlog.md` — Backlog organized by Epic (source of truth for issues).
 - `Product_Roadmap.md` — Roadmap and milestone timeline.
-- `TODO.md` — Phase1 task list and next quick actions.
+- `TODO.md` — Phase1 task list and next quick actions. (located at root; `Backlog/` is now for archives)
 - `Runbooks/Editor-Scripts.md` — How to run editor scripts and tooling.
 - `scripts/` — Editor helper scripts (example usage in README).
 - `issues/` — Local issue stubs and task templates.
@@ -22,4 +22,7 @@ Related / historical
 
 If a document you expect is missing, please open a quick issue in `issues/`.
 
+> **Note:** Active backlog documents (`Product_Backlog.md`, `TODO.md`,
+> `PROJECT_STATUS.md`) now live at the project root. Older materials have been
+> archived.
 ``` 

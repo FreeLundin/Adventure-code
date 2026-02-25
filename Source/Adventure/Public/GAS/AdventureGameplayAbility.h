@@ -41,6 +41,13 @@ class ADVENTURE_API UGA_AdventureTraversal : public UAdventureGameplayAbility
 
 public:
 	UGA_AdventureTraversal();
+
+	// perform traversal logic when the ability activates
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo* ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData* TriggerEventData) override;
 };
 
 UCLASS()

@@ -1,0 +1,48 @@
+name: AI Canary Validation
+
+on:
+  pull_request:
+    paths:
+      - 'ai/**'
+      - '.github/workflows/ai_canary.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'ai/**'
+
+jobs:
+  run-canary:
+    runs-on: ubuntu-latest
+    env:
+      MCP_BASE_URL: ${{ secrets.MCP_BASE_URL }}
+      API_TOKEN: ${{ secrets.MCP_API_TOKEN }}
+      MODEL_NAME: ${{ github.event.inputs.model_name || 'example-model' }}
+      MODEL_VERSION: ${{ github.event.inputs.model_version || 'v1.0' }}
+      CANARY_PERCENT: ${{ github.event.inputs.canary_percent || '10' }}
+      LATENCY_THRESHOLD_MS: ${{ github.event.inputs.latency_threshold_ms || '50' }}
+      ERROR_RATE_THRESHOLD: ${{ github.event.inputs.error_rate_threshold || '0.02' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq curl
+
+      - name: Make canary script executable
+        run: chmod +x ai/canary/canary_control.sh
+
+      - name: Run canary control script
+        id: canary
+        run: |
+          set -o pipefail
+          ai/canary/canary_control.sh "$MODEL_NAME" "$MODEL_VERSION" "$CANARY_PERCENT" "$METRIC_WINDOW_SECONDS" "$LATENCY_THRESHOLD_MS" "$ERROR_RATE_THRESHOLD" | tee canary.out
+
+      - name: Check for rollback indicator
+        if: always()
+        run: |
+          if grep -q "Rolling back" canary.out; then
+            echo "::error::Canary indicated rollback – failing workflow."
+            exit 1
+          fi
+          echo "Canary succeeded or metrics within threshold."

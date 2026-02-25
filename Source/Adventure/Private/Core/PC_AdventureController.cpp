@@ -4,12 +4,13 @@
 #include "Core/PC_AdventureController.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
-#include "Blueprint/UserWidget.h"
-#include "UI/WB_HUD.h"
 #include "Character/CBP_AdventureCharacter.h"
 #include "Character/CBP_AdventureCharacter_Mover.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+
+// forward declaration to avoid include
+class ULocalPlayer;
 #include "GAS/AdventureGameplayTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputActionValue.h"
@@ -33,8 +34,7 @@ void APC_AdventureController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Spawn main gameplay HUD
-	SpawnHUD();
+	// HUD disabled in rollback baseline
 }
 
 void APC_AdventureController::OnPossess(APawn* InPawn)
@@ -95,37 +95,12 @@ void APC_AdventureController::SetupInputComponent()
 
 void APC_AdventureController::SetupEnhancedInput()
 {
-	if (!IsLocalPlayerController())
-	{
-		return;
-	}
-
-	UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-
-	if (Subsystem && DefaultInputMappingContext)
-	{
-		Subsystem->AddMappingContext(DefaultInputMappingContext, 0);
-	}
-
-	// TODO: Bind input actions to member functions
-	// This should be done in a derived Blueprint class or via SetupInputComponent
+	// Enhanced Input disabled in rollback baseline; nothing to do
 }
 
 void APC_AdventureController::TeardownEnhancedInput()
 {
-	if (!IsLocalPlayerController())
-	{
-		return;
-	}
-
-	UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-
-	if (Subsystem && DefaultInputMappingContext)
-	{
-		Subsystem->RemoveMappingContext(DefaultInputMappingContext);
-	}
+	// No-op for baseline
 }
 
 void APC_AdventureController::OnMoveInput(const FInputActionValue& Value)
@@ -204,38 +179,7 @@ void APC_AdventureController::OnPauseInput(const FInputActionValue& Value)
 	SetGamePaused(!bGamePaused);
 }
 
-void APC_AdventureController::SpawnHUD()
-{
-	if (HUDWidgetClass)
-	{
-		HUDWidget = CreateWidget<UUserWidget>(this, HUDWidgetClass);
-		if (HUDWidget)
-		{
-			HUDWidget->AddToViewport(0);
 
-			// Initialize HUD if it's a WB_HUD instance
-			if (UWB_HUD* MainHUD = Cast<UWB_HUD>(HUDWidget))
-			{
-				MainHUD->InitializeHUD(this);
-				UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::SpawnHUD - HUD widget initialized with GAS bindings"));
-			}
-		}
-	}
-}
-
-void APC_AdventureController::RemoveHUD()
-{
-	if (HUDWidget)
-	{
-		HUDWidget->RemoveFromParent();
-		HUDWidget = nullptr;
-	}
-}
-
-UUserWidget* APC_AdventureController::GetHUDWidget() const
-{
-	return HUDWidget;
-}
 
 ACBP_AdventureCharacter* APC_AdventureController::GetAdventureCharacter() const
 {

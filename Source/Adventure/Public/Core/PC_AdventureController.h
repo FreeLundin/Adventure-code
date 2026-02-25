@@ -226,36 +226,8 @@ public:
 	void OnPauseInput(const FInputActionValue& Value);
 
 	// ===== HUD & UI MANAGEMENT =====
+	// (removed for baseline rollback)
 
-	/**
-	 * SpawnHUD
-	 * 
-	 * Creates and adds main gameplay HUD widget to viewport.
-	 * Called during BeginPlay or character possession.
-	 * Binds HUD to character's attribute system for real-time updates.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void SpawnHUD();
-
-	/**
-	 * RemoveHUD
-	 * 
-	 * Removes main gameplay HUD widget from viewport.
-	 * Called during character death or transition sequences.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "UI")
-	void RemoveHUD();
-
-	/**
-	 * GetHUDWidget
-	 * 
-	 * Returns the main gameplay HUD widget.
-	 * Used by character or game mode to update HUD state or retrieve HUD references.
-	 * 
-	 * @return		The spawned HUD widget, or nullptr if not yet created
-	 */
-	UFUNCTION(BlueprintPure, Category = "UI")
-	UUserWidget* GetHUDWidget() const;
 
 	// ===== CHARACTER ACCESS =====
 
