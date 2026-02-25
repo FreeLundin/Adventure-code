@@ -14,8 +14,8 @@ This directory contains an OpenAPI specification, a simple Python/FastAPI refere
 The service now uses a SQLite database by default and enforces a simple API key for
 access. Override values via environment variables:
 
-* `DATABASE_URL` – SQLAlchemy URL, e.g. `sqlite:///./mcp.db` or `postgresql+psycopg2://user:pass@host/db`
-* `API_KEY` – secret used by clients and the CLI (defaults to `secret`).
+- `DATABASE_URL` – SQLAlchemy URL, e.g. `sqlite:///./mcp.db` or `postgresql+psycopg2://user:pass@host/db`
+- `API_KEY` – secret used by clients and the CLI (defaults to `secret`).
 
 ```powershell
 cd AI/mcp/server
@@ -97,10 +97,10 @@ modifying `infra/resources.bicep`.
 
 ### Extra steps for an enterprise
 
-* Secure the  `API_KEY` / `JWT_SECRET` in Key Vault and reference via
+- Secure the  `API_KEY` / `JWT_SECRET` in Key Vault and reference via
   `az webapp config appsettings set`.
-* Add `COSMOS_CONNECTION` or `POSTGRES_CONNECTION` into `appsettings`.
-* Configure CI to run `azd pipeline create` or use GitHub Actions template.
+- Add `COSMOS_CONNECTION` or `POSTGRES_CONNECTION` into `appsettings`.
+- Configure CI to run `azd pipeline create` or use GitHub Actions template.
 
 ---
 
