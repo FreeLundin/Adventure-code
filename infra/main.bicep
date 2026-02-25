@@ -10,7 +10,7 @@ param name string
 param location string
 
 @description('Object id of the deploying principal to grant RBAC for deployments and app updates.')
-param deployerPrincipalId string
+param deployerPrincipalId string = ''
 
 var resourceToken = toLower(uniqueString(subscription().id, name, location))
 var tags = { 'azd-env-name': name }
@@ -21,15 +21,6 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-resource resourceGroupContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceGroup.id, deployerPrincipalId, 'rg-contrib')
-  scope: resourceGroup
-  properties: {
-    principalId: deployerPrincipalId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
-    principalType: 'User'
-  }
-}
 
 module resources 'resources.bicep' = {
   name: 'resources'

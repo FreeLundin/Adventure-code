@@ -79,6 +79,9 @@ azd env set AZURE_LOCATION eastus
 azd env set DEPLOYER_PRINCIPAL_ID <your-object-id>
 azd env set AZURE_ENV_NAME foundry
 azd provision --preview
+
+> **Quota warning:** if you see errors about SKU or VM quota (e.g. PremiumV3 or Basic VMs), you may need to choose a lower App Service plan SKU or request a quota increase on your subscription. Modify `infra/resources.bicep` and/or open a support ticket.
+
 azd up
 ```
 

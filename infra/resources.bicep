@@ -1,10 +1,10 @@
 param location string
 param resourceToken string
 param tags object
-param deployerPrincipalId string
+param deployerPrincipalId string = ''
 
 @description('The SKU of App Service Plan.')
-param sku string = 'P1v3'
+param sku string = 'B1'
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: 'plan-${resourceToken}'
@@ -49,7 +49,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
   }
 }
 
-resource webAppContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource webAppContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (deployerPrincipalId != '') {
   name: guid(webApp.id, deployerPrincipalId, 'web-contrib')
   scope: webApp
   properties: {
