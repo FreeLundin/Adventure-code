@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+httpx
+requests
+sqlmodel
+prometheus_client
+python-jose[cryptography]
+jsonschema

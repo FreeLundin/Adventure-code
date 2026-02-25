@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: mcp-python-service
+metadata:
+  template: remote-mcp-webapp-python@0.0.1-beta
+services:
+  web:
+    project: AI/mcp/server
+    language: python
+    host: appservice

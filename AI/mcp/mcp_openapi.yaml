@@ -21,16 +21,250 @@ info:
 servers:
   - url: https://mcp.example.com/api
 
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ModelCard:
+      type: object
+      required: [name, version]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+          description: A brief description of the model's purpose and capabilities
+        owner:
+          type: string
+          description: The team or individual responsible for the model
+        tenant:
+          type: string
+          description: Tenant/namespace owning the model (for ACLs)
+        license:
+          type: string
+          description: License under which the model is released
+        tags:
+          type: array
+          items:
+            type: string
+          description: Keywords or categories associated with the model; used by the API for filtering/search
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        provenance:
+          type: object
+          description: Additional metadata about model lineage (training data, source repo, etc.)
+        metadata:
+          type: object
+          description: Arbitrary key/value data provided at registration
+    RegisterModelRequest:
+      type: object
+      required: [name, version, model_url, model_card_url]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        model_url:
+          type: string
+        model_card_url:
+          type: string
+        checksum:
+          type: string
+        metadata:
+          type: object
+    PromoteModelRequest:
+      type: object
+      required: [name, version, target]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        target:
+          type: string
+          enum: [canary, stable]
+        canary_percent:
+          type: integer
+    RollbackRequest:
+      type: object
+      required: [name, to_version]
+      properties:
+        name:
+          type: string
+        to_version:
+          type: string
+    MetricsRequest:
+      type: object
+      required: [model_name, model_version, metrics]
+      properties:
+        model_name:
+          type: string
+        model_version:
+          type: string
+        metrics:
+          type: object
+          description: |
+            Example:
+            {
+              "latency_ms": 12.3,
+              "error_rate": 0.01,
+              "throughput": 120
+            }
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
 tags:
   - name: models
     description: Operations on models and telemetry
 
 paths:
+  /models:
+    get:
+      tags:
+        - models
+      summary: List registered models
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Filter results by model name (optional)
+        - in: query
+          name: tag
+          schema:
+            type: string
+          description: Return only cards containing this tag
+      responses:
+        '200':
+          description: A list of model cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelCard'
+  /models/search:
+    get:
+      tags:
+        - models
+      summary: Search models by name or tag
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelCard'
+  /models/{name}:
+    get:
+      tags:
+        - models
+      summary: Retrieve all versions of a given model
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Array of model cards for each version
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelCard'
+  /models/{name}/versions/{version}:
+    delete:
+      tags:
+        - models
+      summary: Delete a specific model version
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: version
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Model version deleted
+  /models/{name}/promotions:
+    get:
+      tags:
+        - models
+      summary: Get active promotions for a model
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Promotion entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    version:
+                      type: string
+                    target:
+                      type: string
+                    canary_percent:
+                      type: integer
+    delete:
+      tags:
+        - models
+      summary: Clear promotions for a model (same as rollback)
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Promotions removed
   /models/register:
     post:
       tags:
         - models
       summary: Register a new model artifact
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -94,6 +328,38 @@ paths:
         '200':
           description: Rolled back
   /models/metrics:
+    get:
+      tags:
+        - models
+      summary: Query stored metrics
+      parameters:
+        - in: query
+          name: model_name
+          schema:
+            type: string
+        - in: query
+          name: model_version
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of metric entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    model_name:
+                      type: string
+                    model_version:
+                      type: string
+                    metrics:
+                      type: object
+                    timestamp:
+                      type: string
+                      format: date-time
     post:
       tags:
         - models
@@ -116,70 +382,3 @@ paths:
       responses:
         '200':
           description: Metrics accepted
-components:
-  schemas:
-    ModelCard:
-      type: object
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-        owner:
-          type: string
-        provenance:
-          type: object
-    RegisterModelRequest:
-      type: object
-      required: [name, version, model_url, model_card_url]
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-        model_url:
-          type: string
-        model_card_url:
-          type: string
-        checksum:
-          type: string
-        metadata:
-          type: object
-    PromoteModelRequest:
-      type: object
-      required: [name, version, target]
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-        target:
-          type: string
-          enum: [canary, stable]
-        canary_percent:
-          type: integer
-    RollbackRequest:
-      type: object
-      required: [name, to_version]
-      properties:
-        name:
-          type: string
-        to_version:
-          type: string
-    MetricsRequest:
-      type: object
-      required: [model_name, model_version, metrics]
-      properties:
-        model_name:
-          type: string
-        model_version:
-          type: string
-        metrics:
-          type: object
-          description: |
-            Example:
-            {
-              "latency_ms": 12.3,
-              "error_rate": 0.01,
-              "throughput": 120
-            }
