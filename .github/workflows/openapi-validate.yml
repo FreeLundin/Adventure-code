@@ -1,0 +1,21 @@
+name: "OpenAPI validation"
+on:
+  push:
+    paths:
+      - 'AI/mcp/**.yaml'
+  pull_request:
+    paths:
+      - 'AI/mcp/**.yaml'
+
+jobs:
+  lint:
+    name: Validate OpenAPI specs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install validator
+        run: |
+          npm install -g @apidevtools/swagger-cli
+      - name: Run validation
+        run: |
+          swagger-cli validate AI/mcp/mcp_openapi.yaml

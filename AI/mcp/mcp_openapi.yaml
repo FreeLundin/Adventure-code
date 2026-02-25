@@ -1,101 +1,118 @@
+# The MCP tooling will automatically pick whichever schema comment resolves
+# successfully in the current context, allowing an arbitrary mix of online and
+# offline sources.  Place multiple schema lines below; the language server stops
+# at the first one that returns a valid document.
+#
+# Typical options include:
+#   * Official URL (requires internet access)
+#   * Schemastore mirror (cached, more resilient)
+#   * Local file alongside this YAML (fully offline) – see `AI/mcp/openapi-3.0-schema.json`
+#
+# You may uncomment/duplicate lines as needed.
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2023-09-27.json
+# (or the older, widely‑used location)
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2023-09-27.json
 openapi: 3.0.3
 info:
   title: Model Control Plane (MCP) API
   version: "1.0.0"
+  description: |
+    A short description of the Model Control Plane API.
 servers:
   - url: https://mcp.example.com/api
+
+tags:
+  - name: models
+    description: Operations on models and telemetry
+
 paths:
   /models/register:
     post:
+      tags:
+        - models
       summary: Register a new model artifact
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [name, version, model_url, model_card_url]
-              properties:
-                name:
-                  type: string
-                version:
-                  type: string
-                model_url:
-                  type: string
-                model_card_url:
-                  type: string
-                checksum:
-                  type: string
-                metadata:
-                  type: object
+              $ref: '#/components/schemas/RegisterModelRequest'
+            examples:
+              sample:
+                value:
+                  name: "my-model"
+                  version: "1.0"
+                  model_url: "https://example.com/model.onnx"
+                  model_card_url: "https://example.com/model-card.json"
+                  checksum: "abc123"
+                  metadata: {}
       responses:
         '200':
           description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelCard'
   /models/promote:
     post:
+      tags:
+        - models
       summary: Promote model to canary or stable
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [name, version, target]
-              properties:
-                name:
-                  type: string
-                version:
-                  type: string
-                target:
-                  type: string
-                  enum: [canary, stable]
-                canary_percent:
-                  type: integer
+              $ref: '#/components/schemas/PromoteModelRequest'
+            examples:
+              sample:
+                value:
+                  name: "my-model"
+                  version: "1.0"
+                  target: "canary"
+                  canary_percent: 10
       responses:
         '200':
           description: Promoted
   /models/rollback:
     post:
+      tags:
+        - models
       summary: Rollback model to previous stable version
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [name, to_version]
-              properties:
-                name:
-                  type: string
-                to_version:
-                  type: string
+              $ref: '#/components/schemas/RollbackRequest'
+            examples:
+              sample:
+                value:
+                  name: "my-model"
+                  to_version: "0.9"
       responses:
         '200':
           description: Rolled back
   /models/metrics:
     post:
+      tags:
+        - models
       summary: Ingest telemetry metrics
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [model_name, model_version, metrics]
-              properties:
-                model_name:
-                  type: string
-                model_version:
-                  type: string
-                metrics:
-                  type: object
-                  description: |
-                    Example:
-                    {
-                      "latency_ms": 12.3,
-                      "error_rate": 0.01,
-                      "throughput": 120
-                    }
+              $ref: '#/components/schemas/MetricsRequest'
+            examples:
+              sample:
+                value:
+                  model_name: "my-model"
+                  model_version: "1.0"
+                  metrics:
+                    latency_ms: 12.3
+                    error_rate: 0.01
+                    throughput: 120
       responses:
         '200':
           description: Metrics accepted
@@ -112,3 +129,57 @@ components:
           type: string
         provenance:
           type: object
+    RegisterModelRequest:
+      type: object
+      required: [name, version, model_url, model_card_url]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        model_url:
+          type: string
+        model_card_url:
+          type: string
+        checksum:
+          type: string
+        metadata:
+          type: object
+    PromoteModelRequest:
+      type: object
+      required: [name, version, target]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        target:
+          type: string
+          enum: [canary, stable]
+        canary_percent:
+          type: integer
+    RollbackRequest:
+      type: object
+      required: [name, to_version]
+      properties:
+        name:
+          type: string
+        to_version:
+          type: string
+    MetricsRequest:
+      type: object
+      required: [model_name, model_version, metrics]
+      properties:
+        model_name:
+          type: string
+        model_version:
+          type: string
+        metrics:
+          type: object
+          description: |
+            Example:
+            {
+              "latency_ms": 12.3,
+              "error_rate": 0.01,
+              "throughput": 120
+            }
