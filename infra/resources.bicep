@@ -4,7 +4,7 @@ param tags object
 param deployerPrincipalId string = ''
 
 @description('The SKU of App Service Plan.')
-param sku string = 'B1'
+param sku string = 'F1'  // free tier; change if not available
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: 'plan-${resourceToken}'
