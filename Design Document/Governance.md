@@ -17,6 +17,14 @@ define a lightweight process for contributors.
 - Convert actionable TODO entries into issues under `Documentation/issues/` with required front-matter: `Owner`, `Estimate`, `Priority`, `Phase`.
 - Backlog items in `Product_Backlog.md` should map to issues; reference issue IDs in the roadmap and `PROJECT_STATUS.md` for traceability.
 
+3a) Change Tracking (MANDATORY)
+- **ALL code, configuration, and asset changes MUST be logged in `CHANGELOG.md`** (project root).
+- See `Documentation_Workflow.md` for the complete change tracking process.
+- Every session MUST update CHANGELOG.md before completion - no exceptions.
+- Configuration (.ini) changes require: setting name, value, why, impact, verification, and rollback procedure.
+- Code changes require: file paths, line counts, why needed, dependencies added.
+- AI assistants must create/update CHANGELOG entries as work progresses, not retrospectively.
+
 4) PR & Review Rules
 - Small docs fixes may merge with one approval from a reviewer listed in `CODEOWNERS`.
 - Design or gameplay changes require at least one engineering and one design reviewer, and must reference related issues and the `PROJECT_STATUS.md` entry if milestone-impacting.

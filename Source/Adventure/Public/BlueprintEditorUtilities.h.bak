@@ -1,0 +1,284 @@
+// BlueprintEditorUtilities.h
+// USE CASE 3: Programmatically Creating/Modifying Blueprint Assets in the Editor
+// This demonstrates Editor-only operations for Blueprint asset manipulation
+// NOTE: This code only compiles and runs in the Editor, not in packaged games
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
+
+#if WITH_EDITOR
+#include "Engine/Blueprint.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#endif
+
+#include "BlueprintEditorUtilities.generated.h"
+
+/**
+ * Editor utility class for programmatic Blueprint creation and modification
+ * All functions in this class are Editor-only and will not be available in packaged builds
+ */
+UCLASS()
+class ADVENTURE_API UBlueprintEditorUtilities : public UObject
+{
+    GENERATED_BODY()
+
+public:
+
+#if WITH_EDITOR
+    // ============================================================================
+    // CREATING NEW BLUEPRINT ASSETS
+    // ============================================================================
+
+    /**
+     * Create a new Blueprint asset from a parent class
+     * @param PackagePath - Where to save the Blueprint (e.g., "/Game/Blueprints/")
+     * @param BlueprintName - Name of the new Blueprint
+     * @param ParentClass - The C++ or Blueprint class to inherit from
+     * @return The created Blueprint, or nullptr if creation failed
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static UBlueprint* CreateNewBlueprint(const FString& PackagePath, const FString& BlueprintName, UClass* ParentClass);
+
+    /**
+     * Create a Blueprint Interface asset
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static UBlueprint* CreateBlueprintInterface(const FString& PackagePath, const FString& InterfaceName);
+
+    /**
+     * Create a Blueprint Function Library (collection of static functions)
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static UBlueprint* CreateBlueprintFunctionLibrary(const FString& PackagePath, const FString& LibraryName);
+
+    /**
+     * Duplicate an existing Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static UBlueprint* DuplicateBlueprint(UBlueprint* SourceBlueprint, const FString& NewPackagePath, const FString& NewName);
+
+    // ============================================================================
+    // ADDING COMPONENTS TO BLUEPRINTS
+    // ============================================================================
+
+    /**
+     * Add a component to a Blueprint's default actor
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddComponentToBlueprint(UBlueprint* Blueprint, TSubclassOf<UActorComponent> ComponentClass, 
+        const FString& ComponentName);
+
+    /**
+     * Add a Static Mesh Component with a specific mesh
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddStaticMeshComponentToBlueprint(UBlueprint* Blueprint, const FString& ComponentName, 
+        UStaticMesh* Mesh);
+
+    /**
+     * Add a Skeletal Mesh Component
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddSkeletalMeshComponentToBlueprint(UBlueprint* Blueprint, const FString& ComponentName, 
+        USkeletalMesh* SkeletalMesh);
+
+    /**
+     * Remove a component from a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool RemoveComponentFromBlueprint(UBlueprint* Blueprint, const FString& ComponentName);
+
+    // ============================================================================
+    // ADDING VARIABLES TO BLUEPRINTS
+    // ============================================================================
+
+    /**
+     * Add a float variable to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddFloatVariable(UBlueprint* Blueprint, const FString& VariableName, float DefaultValue = 0.f);
+
+    /**
+     * Add an integer variable to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddIntVariable(UBlueprint* Blueprint, const FString& VariableName, int32 DefaultValue = 0);
+
+    /**
+     * Add a boolean variable to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddBoolVariable(UBlueprint* Blueprint, const FString& VariableName, bool DefaultValue = false);
+
+    /**
+     * Add a string variable to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddStringVariable(UBlueprint* Blueprint, const FString& VariableName, const FString& DefaultValue = "");
+
+    /**
+     * Add an object reference variable to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddObjectVariable(UBlueprint* Blueprint, const FString& VariableName, UClass* ObjectClass);
+
+    /**
+     * Add an array variable to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddArrayVariable(UBlueprint* Blueprint, const FString& VariableName, const FString& InnerType);
+
+    /**
+     * Set variable metadata (EditAnywhere, BlueprintReadOnly, etc.)
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool SetVariableMetadata(UBlueprint* Blueprint, const FString& VariableName, 
+        bool bEditAnywhere, bool bBlueprintReadOnly, const FString& Category);
+
+    /**
+     * Remove a variable from a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool RemoveVariable(UBlueprint* Blueprint, const FString& VariableName);
+
+    // ============================================================================
+    // ADDING FUNCTIONS TO BLUEPRINTS
+    // ============================================================================
+
+    /**
+     * Add a new Blueprint function
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddFunction(UBlueprint* Blueprint, const FString& FunctionName);
+
+    /**
+     * Add an override of a parent function
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddFunctionOverride(UBlueprint* Blueprint, const FString& FunctionName);
+
+    /**
+     * Add a custom event to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddCustomEvent(UBlueprint* Blueprint, const FString& EventName);
+
+    // ============================================================================
+    // MODIFYING BLUEPRINT PROPERTIES
+    // ============================================================================
+
+    /**
+     * Set a default property value in a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool SetBlueprintDefaultFloatProperty(UBlueprint* Blueprint, const FString& PropertyName, float Value);
+
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool SetBlueprintDefaultIntProperty(UBlueprint* Blueprint, const FString& PropertyName, int32 Value);
+
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool SetBlueprintDefaultBoolProperty(UBlueprint* Blueprint, const FString& PropertyName, bool Value);
+
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool SetBlueprintDefaultStringProperty(UBlueprint* Blueprint, const FString& PropertyName, const FString& Value);
+
+    // ============================================================================
+    // BLUEPRINT COMPILATION AND SAVING
+    // ============================================================================
+
+    /**
+     * Compile a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool CompileBlueprint(UBlueprint* Blueprint);
+
+    /**
+     * Save a Blueprint asset to disk
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool SaveBlueprint(UBlueprint* Blueprint);
+
+    /**
+     * Mark a Blueprint as modified (dirty)
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static void MarkBlueprintModified(UBlueprint* Blueprint);
+
+    // ============================================================================
+    // BLUEPRINT ASSET DISCOVERY
+    // ============================================================================
+
+    /**
+     * Find all Blueprint assets in a directory
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static TArray<UBlueprint*> FindAllBlueprintsInPath(const FString& Path);
+
+    /**
+     * Find all Blueprints that inherit from a specific class
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static TArray<UBlueprint*> FindBlueprintsByParentClass(UClass* ParentClass);
+
+    /**
+     * Load a Blueprint asset by path
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static UBlueprint* LoadBlueprintAsset(const FString& AssetPath);
+
+    // ============================================================================
+    // BATCH OPERATIONS
+    // ============================================================================
+
+    /**
+     * Batch modify multiple Blueprints (e.g., add a variable to all Blueprints in a folder)
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static int32 BatchAddVariableToBlueprints(const TArray<UBlueprint*>& Blueprints, 
+        const FString& VariableName, const FString& VariableType);
+
+    /**
+     * Batch compile multiple Blueprints
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static int32 BatchCompileBlueprints(const TArray<UBlueprint*>& Blueprints);
+
+    /**
+     * Reparent a Blueprint to a new parent class
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool ReparentBlueprint(UBlueprint* Blueprint, UClass* NewParentClass);
+
+    // ============================================================================
+    // BLUEPRINT INTERFACES
+    // ============================================================================
+
+    /**
+     * Add an interface to a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool AddInterfaceToBlueprint(UBlueprint* Blueprint, TSubclassOf<UInterface> Interface);
+
+    /**
+     * Remove an interface from a Blueprint
+     */
+    UFUNCTION(BlueprintCallable, Category = "Blueprint Editor", meta = (CallInEditor = "true"))
+    static bool RemoveInterfaceFromBlueprint(UBlueprint* Blueprint, TSubclassOf<UInterface> Interface);
+
+    // ============================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================
+
+private:
+    // Helper to get Blueprint generated class default object
+    static UObject* GetBlueprintCDO(UBlueprint* Blueprint);
+    
+    // Helper to find variable by name
+    static FBPVariableDescription* FindVariable(UBlueprint* Blueprint, const FName& VariableName);
+
+#endif // WITH_EDITOR
+};

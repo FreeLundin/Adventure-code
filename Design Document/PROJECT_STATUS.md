@@ -33,7 +33,8 @@ Phase summary (current status)
     - Adventure gameplay tags + ability stubs (Sprint, Dodge, Traversal, Interact)
     - Default attributes GE (UGE_AdventureDefaultAttributes)
   - HUD (WB_HUD) bindings: IN PROGRESS (SpawnHUD() scaffolded; attribute bindings pending)
-  - Build status: DONE ✅ (Live coding compile succeeded)
+  - **Sandbox mode camera system: DONE ✅** (Fixed duplicate components; inheritance refactored per ADR-001)
+  - Build status: DONE ✅ (Win64 Development clean build; zero C2509 errors)
 
 - Phase 2 — Combat & GAS (Weeks 4–6): PLANNED
   - GA_LightAttack, GA_HeavyAttack: TODO
@@ -59,11 +60,16 @@ Where to track progress
 - Convert TODO items into issues in `Documentation/issues/` and link back to this file.
 - For C++ function implementations, refer to TODO comments in .cpp files.
 
-Recent Changes (Feb 21, 2026)
+Recent Changes (Feb 21, 2026–Feb 24, 2026)
+- ✅ **Fixed camera system in Sandbox mode** (Issue PH1-CAM-001; removed duplicate components per ADR-001)
+- ✅ Refactored Sandbox character inheritance: CMC & Mover now extend ACBP_AdventureCharacter
+- ✅ Added GetCameraManager() and GetRitualEnergyManager() public accessors to parent class
+- ✅ Removed redundant GAS initialization from Sandbox variants
+- ✅ Editor launches without access violation crashes (cache cleared; initialization timing fixed)
 - ✅ Added Mover2 character variant (ACBP_AdventureCharacter_Mover)
 - ✅ Implemented GAS foundation (PlayerState ASC, AttributeSet, tags, ability stubs)
 - ✅ Added default attributes GameplayEffect
-- ✅ Build succeeds via Live Coding
+- ✅ Build succeeds; zero compilation errors
 - ✅ Updated GDD sections and Coursera requirements
 
 Notes

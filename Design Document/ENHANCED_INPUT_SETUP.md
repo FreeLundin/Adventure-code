@@ -17,7 +17,8 @@ This guide walks through creating Enhanced Input System (EIS) assets for Adventu
 2. In the Editor, go to **Tools → Python Console**
 3. Paste and execute:
    ```python
-   exec("C:/Unreal_Projects/Adventure/scripts/create_enhanced_input_assets.py")
+   import runpy
+   runpy.run_path("C:/Unreal_Projects/Adventure/scripts/create_enhanced_input_assets.py")
    ```
 4. Check the Output Log — should see "Enhanced Input Asset Creation Complete!"
 

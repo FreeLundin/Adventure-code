@@ -1,0 +1,133 @@
+// ExampleUsageManager.h
+// Practical examples demonstrating all three use cases working together
+// This shows real-world scenarios for your Adventure project
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "ExampleUsageManager.generated.h"
+
+/**
+ * Example manager showing practical use of all three Blueprint interop use cases
+ */
+UCLASS(Blueprintable)
+class ADVENTURE_API AExampleUsageManager : public AActor
+{
+    GENERATED_BODY()
+
+public:
+    AExampleUsageManager();
+
+    // ============================================================================
+    // EXAMPLE 1: Enemy Spawn System
+    // Combines Use Case 1 (exposed properties) with Use Case 2 (runtime spawning)
+    // ============================================================================
+
+    /**
+     * Reference to enemy Blueprint class (set in editor or Blueprint)
+     * This demonstrates Use Case 1: Exposing properties to Blueprint
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy System")
+    TSubclassOf<AActor> EnemyBlueprintClass;
+
+    /**
+     * Spawn an enemy and configure it at runtime
+     * Demonstrates Use Case 2: Runtime manipulation
+     */
+    UFUNCTION(BlueprintCallable, Category = "Enemy System")
+    AActor* SpawnEnemyWithDifficulty(FVector Location, int32 DifficultyLevel);
+
+    /**
+     * Find all enemies and scale their health based on player level
+     * Demonstrates Use Case 2: Batch runtime modification
+     */
+    UFUNCTION(BlueprintCallable, Category = "Enemy System")
+    void ScaleAllEnemiesByPlayerLevel(int32 PlayerLevel);
+
+    // ============================================================================
+    // EXAMPLE 2: Loot System
+    // Shows dynamic property modification based on game state
+    // ============================================================================
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Loot System")
+    TArray<TSubclassOf<AActor>> LootBlueprintClasses;
+
+    /**
+     * Spawn loot chest and randomize its contents
+     */
+    UFUNCTION(BlueprintCallable, Category = "Loot System")
+    AActor* SpawnRandomizedLootChest(FVector Location);
+
+    // ============================================================================
+    // EXAMPLE 3: Dynamic Quest System
+    // Spawns and configures quest actors at runtime
+    // ============================================================================
+
+    /**
+     * Create a quest NPC with specific dialogue and rewards
+     */
+    UFUNCTION(BlueprintCallable, Category = "Quest System")
+    AActor* CreateQuestNPC(const FString& NPCName, const FString& QuestText, int32 GoldReward);
+
+    // ============================================================================
+    // EXAMPLE 4: Debugging and Testing
+    // Useful for development and debugging
+    // ============================================================================
+
+    /**
+     * Print all properties of a Blueprint actor (for debugging)
+     */
+    UFUNCTION(BlueprintCallable, Category = "Debug")
+    void DebugPrintActorProperties(AActor* TargetActor);
+
+    /**
+     * Test calling a Blueprint function by name
+     */
+    UFUNCTION(BlueprintCallable, Category = "Debug")
+    void TestCallBlueprintFunction(AActor* TargetActor, FName FunctionName);
+
+protected:
+    virtual void BeginPlay() override;
+
+private:
+    // Helper: Get property info from an actor
+    void GetPropertyInfo(UObject* Object, TArray<FString>& OutPropertyNames);
+};
+
+
+/**
+ * Example Editor Utility for batch Blueprint operations
+ * Only available in Editor builds
+ */
+#if WITH_EDITOR
+
+UCLASS()
+class ADVENTURE_API UExampleEditorUtility : public UObject
+{
+    GENERATED_BODY()
+
+public:
+    /**
+     * EXAMPLE: Batch setup all character Blueprints
+     * Adds health component and standard variables to all character BPs
+     */
+    UFUNCTION(CallInEditor, Category = "Batch Operations")
+    static void BatchSetupCharacterBlueprints();
+
+    /**
+     * EXAMPLE: Create standard enemy Blueprints
+     * Automatically creates multiple enemy types from a template
+     */
+    UFUNCTION(CallInEditor, Category = "Generation")
+    static void GenerateEnemyBlueprints();
+
+    /**
+     * EXAMPLE: Validate all Blueprints in project
+     * Checks that all character Blueprints have required components
+     */
+    UFUNCTION(CallInEditor, Category = "Validation")
+    static void ValidateAllCharacterBlueprints();
+};
+
+#endif

@@ -108,8 +108,65 @@ void APC_AdventureController::SetupEnhancedInput()
 		Subsystem->AddMappingContext(DefaultInputMappingContext, 0);
 	}
 
-	// TODO: Bind input actions to member functions
-	// This should be done in a derived Blueprint class or via SetupInputComponent
+	// Bind Enhanced Input actions to callback functions
+	if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		// Movement
+		if (IA_Move)
+		{
+			EIC->BindAction(IA_Move, ETriggerEvent::Triggered, this, &APC_AdventureController::OnMoveInput);
+		}
+
+		// Look/Camera rotation
+		if (IA_Look)
+		{
+			EIC->BindAction(IA_Look, ETriggerEvent::Triggered, this, &APC_AdventureController::OnLookInput);
+		}
+
+		// Sprint
+		if (IA_Sprint)
+		{
+			EIC->BindAction(IA_Sprint, ETriggerEvent::Triggered, this, &APC_AdventureController::OnSprintInput);
+		}
+
+		// Dodge/Jump
+		if (IA_Dodge)
+		{
+			EIC->BindAction(IA_Dodge, ETriggerEvent::Started, this, &APC_AdventureController::OnDodgeInput);
+		}
+
+		// Abilities
+		if (IA_AttackLight)
+		{
+			EIC->BindAction(IA_AttackLight, ETriggerEvent::Started, this, &APC_AdventureController::OnAbilityInput_Light);
+		}
+
+		if (IA_AttackHeavy)
+		{
+			EIC->BindAction(IA_AttackHeavy, ETriggerEvent::Started, this, &APC_AdventureController::OnAbilityInput_Heavy);
+		}
+
+		// Interact
+		if (IA_Interact)
+		{
+			EIC->BindAction(IA_Interact, ETriggerEvent::Started, this, &APC_AdventureController::OnInteractInput);
+		}
+
+		// Camera Toggle (Phase 1 deliverable)
+		if (IA_CameraToggle)
+		{
+			EIC->BindAction(IA_CameraToggle, ETriggerEvent::Started, this, &APC_AdventureController::OnCameraToggleInput);
+			UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::SetupEnhancedInput - Camera toggle bound (Phase 1)"));
+		}
+
+		// Pause
+		if (IA_Pause)
+		{
+			EIC->BindAction(IA_Pause, ETriggerEvent::Started, this, &APC_AdventureController::OnPauseInput);
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::SetupEnhancedInput - All input actions bound"));
+	}
 }
 
 void APC_AdventureController::TeardownEnhancedInput()
@@ -263,28 +320,26 @@ void APC_AdventureController::SetGamePaused(bool bPause)
 
 void APC_AdventureController::CycleCamera()
 {
-	if (!CachedAdventureCharacter)
+	if (CachedAdventureCharacter)
 	{
-		return;
+		// Call character's ToggleCameraMode which uses the new MultiPerspectiveCameraComponent
+		CachedAdventureCharacter->ToggleCameraMode();
+
+		// Sync our cached camera style index with character's new mode
+		CurrentCameraStyleIndex = static_cast<int32>(CachedAdventureCharacter->CameraStyle);
+
+		UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::CycleCamera - Camera toggled via CMC character component"));
 	}
+	else if (CachedAdventureMover)
+	{
+		// Call Mover variant's ToggleCameraMode
+		CachedAdventureMover->ToggleCameraMode();
 
-	// Cycle to next camera mode (TopDown → ThirdPerson → FirstPerson → TopDown)
-	// Camera modes: 0 = TopDown, 1 = ThirdPerson, 2 = FirstPerson
-	CurrentCameraStyleIndex = (CurrentCameraStyleIndex + 1) % 3;
+		// Sync our cached camera style index with character's new mode
+		CurrentCameraStyleIndex = static_cast<int32>(CachedAdventureMover->CameraStyle);
 
-	// Update character's camera style
-	E_CameraStyle NewCameraStyle = static_cast<E_CameraStyle>(CurrentCameraStyleIndex);
-	CachedAdventureCharacter->CameraStyle = NewCameraStyle;
-
-	// Log the camera change
-	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") :
-		(NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person") :
-		TEXT("First-Person");
-	
-	UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::CycleCamera - Switched to %s camera"), *CameraModeName);
-
-	// TODO: Add smooth camera transition animation
-	// TODO: Update HUD to display current camera mode
+		UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::CycleCamera - Camera toggled via Mover character component"));
+	}
 }
 
 int32 APC_AdventureController::GetCurrentCameraStyle() const

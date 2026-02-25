@@ -22,6 +22,8 @@ class UAbilitySystemComponent;
 class UGameplayAbility;
 class UGameplayEffect;
 class UPhysicalAnimationComponent;
+class UMultiPerspectiveCameraComponent;
+class URitualEnergyManagerComponent;
 
 /**
  * ACBP_AdventureCharacter
@@ -266,6 +268,38 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void SetupCamera(APlayerController* PlayerController);
 
+	/**
+	 * ToggleCameraMode
+	 * 
+	 * Cycles through available camera modes (TopDown → ThirdPerson → FirstPerson → TopDown...).
+	 * Updates CameraStyle property and notifies camera system of mode change.
+	 * Bound to player input action for camera cycling.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	void ToggleCameraMode();
+
+	/**
+	 * GetCameraManager
+	 * 
+	 * Retrieves the multi-perspective camera manager component.
+	 * Used by GameMode, PlayerController, and UI to query/control camera state.
+	 * 
+	 * @return		Pointer to camera manager component, or null if not initialized
+	 */
+	UFUNCTION(BlueprintPure, Category = "Camera")
+	class UMultiPerspectiveCameraComponent* GetCameraManager() const;
+
+	/**
+	 * GetRitualEnergyManager
+	 * 
+	 * Retrieves the ritual energy manager component.
+	 * Used by GameMode, UI, and effects system to query ritual energy state.
+	 * 
+	 * @return		Pointer to ritual energy manager component, or null if not initialized
+	 */
+	UFUNCTION(BlueprintPure, Category = "Rituals")
+	class URitualEnergyManagerComponent* GetRitualEnergyManager() const;
+
 	// ===== TRAVERSAL SYSTEM =====
 
 	/**
@@ -492,6 +526,14 @@ public:
 	/** Motion warping component for sync animation root motion with world positions */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Animation")
 	TObjectPtr<UMotionWarpingComponent> MotionWarping;
+
+	/** Multi-perspective camera manager (handles TopDown/ThirdPerson/FirstPerson cycling) */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Camera")
+	TObjectPtr<UMultiPerspectiveCameraComponent> CameraManager;
+
+	/** Ritual energy manager component (handles decay and HUD feedback) */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Rituals")
+	TObjectPtr<URitualEnergyManagerComponent> RitualEnergyManager;
 
 	// ===== INPUT CONFIGURATION =====
 

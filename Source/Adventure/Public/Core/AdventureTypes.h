@@ -45,6 +45,59 @@ enum E_CameraStyle : uint8
 	FirstPerson UMETA(DisplayName = "First Person")
 };
 
+// ===== ANIMATION ENUMS =====
+
+/**
+ * E_FoleyEventSide
+ * Which side/limb is generating the foley event (for stereo audio positioning)
+ */
+UENUM(BlueprintType)
+enum class E_FoleyEventSide : uint8
+{
+	Left UMETA(DisplayName = "Left"),
+	Right UMETA(DisplayName = "Right"),
+	Center UMETA(DisplayName = "Center")
+};
+
+/**
+ * E_EarlyTransition_Condition
+ * Conditions for early animation transition triggering
+ */
+UENUM(BlueprintType)
+enum class E_EarlyTransition_Condition : uint8
+{
+	OnInput UMETA(DisplayName = "On Input"),
+	OnStateChange UMETA(DisplayName = "On State Change"),
+	OnTimer UMETA(DisplayName = "On Timer"),
+	OnAnimProgress UMETA(DisplayName = "On Animation Progress")
+};
+
+/**
+ * E_EarlyTransition_Destination
+ * Target state after early transition
+ */
+UENUM(BlueprintType)
+enum class E_EarlyTransition_Destination : uint8
+{
+	NextState UMETA(DisplayName = "Next State"),
+	PreviousState UMETA(DisplayName = "Previous State"),
+	SpecificState UMETA(DisplayName = "Specific State"),
+	Idle UMETA(DisplayName = "Idle")
+};
+
+/**
+ * E_TraversalBlendOutCondition
+ * Conditions for blending out of traversal montages
+ */
+UENUM(BlueprintType)
+enum class E_TraversalBlendOutCondition : uint8
+{
+	OnComplete UMETA(DisplayName = "On Complete"),
+	OnInput UMETA(DisplayName = "On Input"),
+	OnFail UMETA(DisplayName = "On Fail"),
+	Immediate UMETA(DisplayName = "Immediate")
+};
+
 // ===== TRAVERSAL STRUCTURES =====
 
 /**

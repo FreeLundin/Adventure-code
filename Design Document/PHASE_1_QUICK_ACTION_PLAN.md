@@ -12,7 +12,9 @@
 ```
 □ STEP 1: Run Enhanced Input Script (5 min)
   Location: Tools → Python Console
-  Command: exec("C:/Unreal_Projects/Adventure/scripts/create_enhanced_input_assets.py")
+  Command:
+  import runpy
+  runpy.run_path("C:/Unreal_Projects/Adventure/scripts/create_enhanced_input_assets.py")
   Expected: 11 assets created in Content/Input/
 
 □ STEP 2: Bind Input Keys (20 min)

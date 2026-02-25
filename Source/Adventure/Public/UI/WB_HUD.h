@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "AttributeSet.h"
 #include "GAS/AdventureAttributeSet.h"
 #include "WB_HUD.generated.h"
 
@@ -67,25 +68,22 @@ public:
 	// ===== ATTRIBUTE UPDATE CALLBACKS =====
 
 	/**
-	 * Called when Health attribute changes (via OnRep_Health)
+	 * Called when Health attribute changes (via GAS delegate)
 	 * Updates health bar and text display
 	 */
-	UFUNCTION()
-	void OnHealthChanged(float NewHealth, float MaxHealth);
+	void OnHealthChanged(const FOnAttributeChangeData& Data);
 
 	/**
-	 * Called when Stamina attribute changes (via OnRep_Stamina)
+	 * Called when Stamina attribute changes (via GAS delegate)
 	 * Updates stamina bar and text display
 	 */
-	UFUNCTION()
-	void OnStaminaChanged(float NewStamina, float MaxStamina);
+	void OnStaminaChanged(const FOnAttributeChangeData& Data);
 
 	/**
-	 * Called when RitualEnergy attribute changes (via OnRep_RitualEnergy)
+	 * Called when RitualEnergy attribute changes (via GAS delegate)
 	 * Updates ritual energy bar and glow effect
 	 */
-	UFUNCTION()
-	void OnRitualEnergyChanged(float NewRitualEnergy, float MaxRitualEnergy);
+	void OnRitualEnergyChanged(const FOnAttributeChangeData& Data);
 
 	// ===== UI UPDATE METHODS =====
 
@@ -123,27 +121,27 @@ public:
 	// ===== WIDGET COMPONENTS (Editable in Blueprint) =====
 
 	/** Health bar progress widget */
-	UPROPERTY(meta = (BindWidget), Category = "HUD")
+	UPROPERTY(meta = (BindWidget))
 	UProgressBar* HealthBar = nullptr;
 
 	/** Health text display (e.g., "100 / 100") */
-	UPROPERTY(meta = (BindWidget), Category = "HUD")
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* HealthText = nullptr;
 
 	/** Stamina bar progress widget */
-	UPROPERTY(meta = (BindWidget), Category = "HUD")
+	UPROPERTY(meta = (BindWidget))
 	UProgressBar* StaminaBar = nullptr;
 
 	/** Stamina text display (e.g., "100 / 100") */
-	UPROPERTY(meta = (BindWidget), Category = "HUD")
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* StaminaText = nullptr;
 
 	/** Ritual Energy bar progress widget */
-	UPROPERTY(meta = (BindWidget), Category = "HUD")
+	UPROPERTY(meta = (BindWidget))
 	UProgressBar* RitualEnergyBar = nullptr;
 
 	/** Ritual Energy text display (e.g., "100 / 100") */
-	UPROPERTY(meta = (BindWidget), Category = "HUD")
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* RitualEnergyText = nullptr;
 
 	// ===== CONFIGURATION (Editable in Blueprint) =====

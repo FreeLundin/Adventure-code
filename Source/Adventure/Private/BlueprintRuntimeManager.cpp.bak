@@ -1,0 +1,574 @@
+// BlueprintRuntimeManager.cpp
+
+#include "BlueprintRuntimeManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+#include "Engine/StreamableManager.h"
+#include "Engine/AssetManager.h"
+#include "UObject/ConstructorHelpers.h"
+
+ABlueprintRuntimeManager::ABlueprintRuntimeManager()
+{
+    PrimaryActorTick.bCanEverTick = false;
+}
+
+void ABlueprintRuntimeManager::BeginPlay()
+{
+    Super::BeginPlay();
+}
+
+// ============================================================================
+// SPAWNING BLUEPRINT ACTORS
+// ============================================================================
+
+AActor* ABlueprintRuntimeManager::SpawnBlueprintActor(FVector Location, FRotator Rotation)
+{
+    if (!BlueprintActorClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("BlueprintActorClass is not set!"));
+        return nullptr;
+    }
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(BlueprintActorClass, Location, Rotation, SpawnParams);
+    
+    if (SpawnedActor)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Successfully spawned Blueprint actor: %s"), *SpawnedActor->GetName());
+    }
+
+    return SpawnedActor;
+}
+
+AActor* ABlueprintRuntimeManager::SpawnBlueprintActorFromPath(const FString& BlueprintPath, FVector Location, FRotator Rotation)
+{
+    UClass* LoadedClass = LoadBlueprintClass(BlueprintPath);
+    
+    if (!LoadedClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to load Blueprint class from path: %s"), *BlueprintPath);
+        return nullptr;
+    }
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    return GetWorld()->SpawnActor<AActor>(LoadedClass, Location, Rotation, SpawnParams);
+}
+
+// ============================================================================
+// PROPERTY ACCESS
+// ============================================================================
+
+FProperty* ABlueprintRuntimeManager::FindPropertyByName(UObject* Object, FName PropertyName)
+{
+    if (!Object)
+    {
+        return nullptr;
+    }
+
+    UClass* Class = Object->GetClass();
+    return Class->FindPropertyByName(PropertyName);
+}
+
+bool ABlueprintRuntimeManager::GetBlueprintPropertyFloat(AActor* TargetActor, FName PropertyName, float& OutValue)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Property '%s' not found on actor '%s'"), 
+            *PropertyName.ToString(), *TargetActor->GetName());
+        return false;
+    }
+
+    FFloatProperty* FloatProperty = CastField<FFloatProperty>(Property);
+    if (!FloatProperty)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Property '%s' is not a float"), *PropertyName.ToString());
+        return false;
+    }
+
+    OutValue = FloatProperty->GetPropertyValue_InContainer(TargetActor);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::GetBlueprintPropertyInt(AActor* TargetActor, FName PropertyName, int32& OutValue)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        return false;
+    }
+
+    FIntProperty* IntProperty = CastField<FIntProperty>(Property);
+    if (!IntProperty)
+    {
+        return false;
+    }
+
+    OutValue = IntProperty->GetPropertyValue_InContainer(TargetActor);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::GetBlueprintPropertyBool(AActor* TargetActor, FName PropertyName, bool& OutValue)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        return false;
+    }
+
+    FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property);
+    if (!BoolProperty)
+    {
+        return false;
+    }
+
+    OutValue = BoolProperty->GetPropertyValue_InContainer(TargetActor);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::GetBlueprintPropertyString(AActor* TargetActor, FName PropertyName, FString& OutValue)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        return false;
+    }
+
+    FStrProperty* StrProperty = CastField<FStrProperty>(Property);
+    if (!StrProperty)
+    {
+        return false;
+    }
+
+    OutValue = StrProperty->GetPropertyValue_InContainer(TargetActor);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::SetBlueprintPropertyFloat(AActor* TargetActor, FName PropertyName, float Value)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Property '%s' not found"), *PropertyName.ToString());
+        return false;
+    }
+
+    FFloatProperty* FloatProperty = CastField<FFloatProperty>(Property);
+    if (!FloatProperty)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Property '%s' is not a float"), *PropertyName.ToString());
+        return false;
+    }
+
+    FloatProperty->SetPropertyValue_InContainer(TargetActor, Value);
+    UE_LOG(LogTemp, Log, TEXT("Set property '%s' to %f on actor '%s'"), 
+        *PropertyName.ToString(), Value, *TargetActor->GetName());
+    return true;
+}
+
+bool ABlueprintRuntimeManager::SetBlueprintPropertyInt(AActor* TargetActor, FName PropertyName, int32 Value)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        return false;
+    }
+
+    FIntProperty* IntProperty = CastField<FIntProperty>(Property);
+    if (!IntProperty)
+    {
+        return false;
+    }
+
+    IntProperty->SetPropertyValue_InContainer(TargetActor, Value);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::SetBlueprintPropertyBool(AActor* TargetActor, FName PropertyName, bool Value)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        return false;
+    }
+
+    FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property);
+    if (!BoolProperty)
+    {
+        return false;
+    }
+
+    BoolProperty->SetPropertyValue_InContainer(TargetActor, Value);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::SetBlueprintPropertyString(AActor* TargetActor, FName PropertyName, const FString& Value)
+{
+    FProperty* Property = FindPropertyByName(TargetActor, PropertyName);
+    
+    if (!Property)
+    {
+        return false;
+    }
+
+    FStrProperty* StrProperty = CastField<FStrProperty>(Property);
+    if (!StrProperty)
+    {
+        return false;
+    }
+
+    StrProperty->SetPropertyValue_InContainer(TargetActor, Value);
+    return true;
+}
+
+// ============================================================================
+// FUNCTION CALLING
+// ============================================================================
+
+UFunction* ABlueprintRuntimeManager::FindFunctionByName(UObject* Object, FName FunctionName)
+{
+    if (!Object)
+    {
+        return nullptr;
+    }
+
+    return Object->FindFunction(FunctionName);
+}
+
+bool ABlueprintRuntimeManager::CallBlueprintFunction(UObject* TargetObject, FName FunctionName)
+{
+    if (!TargetObject)
+    {
+        return false;
+    }
+
+    UFunction* Function = FindFunctionByName(TargetObject, FunctionName);
+    
+    if (!Function)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Function '%s' not found on object '%s'"), 
+            *FunctionName.ToString(), *TargetObject->GetName());
+        return false;
+    }
+
+    // Call the function with no parameters
+    TargetObject->ProcessEvent(Function, nullptr);
+    
+    UE_LOG(LogTemp, Log, TEXT("Called function '%s' on object '%s'"), 
+        *FunctionName.ToString(), *TargetObject->GetName());
+    return true;
+}
+
+bool ABlueprintRuntimeManager::CallBlueprintFunctionWithFloat(UObject* TargetObject, FName FunctionName, float Parameter)
+{
+    if (!TargetObject)
+    {
+        return false;
+    }
+
+    UFunction* Function = FindFunctionByName(TargetObject, FunctionName);
+    
+    if (!Function)
+    {
+        return false;
+    }
+
+    // Create parameter struct
+    struct FFloatParam
+    {
+        float Value;
+    };
+
+    FFloatParam Params;
+    Params.Value = Parameter;
+
+    TargetObject->ProcessEvent(Function, &Params);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::CallBlueprintFunctionWithParams(UObject* TargetObject, FName FunctionName, 
+    float FloatParam, int32 IntParam, bool BoolParam)
+{
+    if (!TargetObject)
+    {
+        return false;
+    }
+
+    UFunction* Function = FindFunctionByName(TargetObject, FunctionName);
+    
+    if (!Function)
+    {
+        return false;
+    }
+
+    // Create parameter struct matching the function signature
+    struct FMultiParam
+    {
+        float FloatValue;
+        int32 IntValue;
+        bool BoolValue;
+    };
+
+    FMultiParam Params;
+    Params.FloatValue = FloatParam;
+    Params.IntValue = IntParam;
+    Params.BoolValue = BoolParam;
+
+    TargetObject->ProcessEvent(Function, &Params);
+    return true;
+}
+
+bool ABlueprintRuntimeManager::CallBlueprintFunctionWithReturn(UObject* TargetObject, FName FunctionName, float& OutReturnValue)
+{
+    if (!TargetObject)
+    {
+        return false;
+    }
+
+    UFunction* Function = FindFunctionByName(TargetObject, FunctionName);
+    
+    if (!Function)
+    {
+        return false;
+    }
+
+    // Create struct for return value
+    struct FReturnParam
+    {
+        float ReturnValue;
+    };
+
+    FReturnParam Params;
+    Params.ReturnValue = 0.f;
+
+    TargetObject->ProcessEvent(Function, &Params);
+    OutReturnValue = Params.ReturnValue;
+    
+    return true;
+}
+
+// ============================================================================
+// COMPONENT ACCESS
+// ============================================================================
+
+UActorComponent* ABlueprintRuntimeManager::GetBlueprintComponentByName(AActor* TargetActor, FName ComponentName)
+{
+    if (!TargetActor)
+    {
+        return nullptr;
+    }
+
+    return TargetActor->GetComponentByClass(UActorComponent::StaticClass());
+}
+
+TArray<UActorComponent*> ABlueprintRuntimeManager::GetBlueprintComponentsByClass(AActor* TargetActor, TSubclassOf<UActorComponent> ComponentClass)
+{
+    TArray<UActorComponent*> Components;
+    
+    if (!TargetActor || !ComponentClass)
+    {
+        return Components;
+    }
+
+    TargetActor->GetComponents(ComponentClass, Components);
+    return Components;
+}
+
+UActorComponent* ABlueprintRuntimeManager::AddComponentToBlueprintActor(AActor* TargetActor, TSubclassOf<UActorComponent> ComponentClass, FName ComponentName)
+{
+    if (!TargetActor || !ComponentClass)
+    {
+        return nullptr;
+    }
+
+    UActorComponent* NewComponent = NewObject<UActorComponent>(TargetActor, ComponentClass, ComponentName);
+    
+    if (NewComponent)
+    {
+        NewComponent->RegisterComponent();
+        TargetActor->AddInstanceComponent(NewComponent);
+        
+        UE_LOG(LogTemp, Log, TEXT("Added component '%s' to actor '%s'"), 
+            *ComponentName.ToString(), *TargetActor->GetName());
+    }
+
+    return NewComponent;
+}
+
+// ============================================================================
+// FINDING BLUEPRINT INSTANCES
+// ============================================================================
+
+TArray<AActor*> ABlueprintRuntimeManager::FindAllBlueprintInstances(const UObject* WorldContextObject, TSubclassOf<AActor> BlueprintClass)
+{
+    TArray<AActor*> FoundActors;
+    
+    if (!WorldContextObject || !BlueprintClass)
+    {
+        return FoundActors;
+    }
+
+    UGameplayStatics::GetAllActorsOfClass(WorldContextObject, BlueprintClass, FoundActors);
+    return FoundActors;
+}
+
+TArray<AActor*> ABlueprintRuntimeManager::FindBlueprintInstancesWithTag(const UObject* WorldContextObject, 
+    TSubclassOf<AActor> BlueprintClass, FName Tag)
+{
+    TArray<AActor*> FoundActors;
+    
+    if (!WorldContextObject || !BlueprintClass)
+    {
+        return FoundActors;
+    }
+
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(WorldContextObject, BlueprintClass, AllActors);
+
+    for (AActor* Actor : AllActors)
+    {
+        if (Actor && Actor->ActorHasTag(Tag))
+        {
+            FoundActors.Add(Actor);
+        }
+    }
+
+    return FoundActors;
+}
+
+// ============================================================================
+// BLUEPRINT INTERFACE
+// ============================================================================
+
+bool ABlueprintRuntimeManager::DoesBlueprintImplementInterface(AActor* TargetActor, TSubclassOf<UInterface> InterfaceClass)
+{
+    if (!TargetActor || !InterfaceClass)
+    {
+        return false;
+    }
+
+    return TargetActor->GetClass()->ImplementsInterface(InterfaceClass);
+}
+
+// ============================================================================
+// DYNAMIC LOADING
+// ============================================================================
+
+UClass* ABlueprintRuntimeManager::LoadBlueprintClass(const FString& BlueprintPath)
+{
+    // Blueprint paths need "_C" suffix for the class
+    FString ClassPath = BlueprintPath;
+    if (!ClassPath.EndsWith(TEXT("_C")))
+    {
+        ClassPath += TEXT("_C");
+    }
+
+    UClass* LoadedClass = StaticLoadClass(AActor::StaticClass(), nullptr, *ClassPath);
+    
+    if (LoadedClass)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Successfully loaded Blueprint class: %s"), *ClassPath);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to load Blueprint class: %s"), *ClassPath);
+    }
+
+    return LoadedClass;
+}
+
+void ABlueprintRuntimeManager::LoadBlueprintClassAsync(const FString& BlueprintPath)
+{
+    FString ClassPath = BlueprintPath;
+    if (!ClassPath.EndsWith(TEXT("_C")))
+    {
+        ClassPath += TEXT("_C");
+    }
+
+    FSoftObjectPath SoftPath(ClassPath);
+    
+    FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+    StreamableManager.RequestAsyncLoad(SoftPath, [this, ClassPath]()
+    {
+        OnBlueprintAsyncLoadCompleted(ClassPath);
+    });
+}
+
+void ABlueprintRuntimeManager::OnBlueprintAsyncLoadCompleted(const FString& BlueprintPath)
+{
+    UClass* LoadedClass = LoadBlueprintClass(BlueprintPath);
+    
+    if (LoadedClass)
+    {
+        OnBlueprintClassLoaded.Broadcast(LoadedClass);
+    }
+}
+
+// ============================================================================
+// EXAMPLES
+// ============================================================================
+
+void ABlueprintRuntimeManager::ModifyAllBlueprintInstances(TSubclassOf<AActor> BlueprintClass, FName PropertyName, float NewValue)
+{
+    TArray<AActor*> Instances = FindAllBlueprintInstances(this, BlueprintClass);
+    
+    for (AActor* Instance : Instances)
+    {
+        SetBlueprintPropertyFloat(Instance, PropertyName, NewValue);
+    }
+    
+    UE_LOG(LogTemp, Log, TEXT("Modified %d instances of Blueprint class"), Instances.Num());
+}
+
+AActor* ABlueprintRuntimeManager::CloneBlueprintActor(AActor* SourceActor)
+{
+    if (!SourceActor)
+    {
+        return nullptr;
+    }
+
+    // Spawn a new instance of the same class
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Template = SourceActor;  // Use source as template
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    AActor* ClonedActor = GetWorld()->SpawnActor<AActor>(
+        SourceActor->GetClass(),
+        SourceActor->GetActorLocation(),
+        SourceActor->GetActorRotation(),
+        SpawnParams
+    );
+
+    UE_LOG(LogTemp, Log, TEXT("Cloned actor: %s"), *SourceActor->GetName());
+    return ClonedActor;
+}
+
+void ABlueprintRuntimeManager::BatchModifyBlueprintActors(const TArray<AActor*>& Actors, FName PropertyName, float Multiplier)
+{
+    for (AActor* Actor : Actors)
+    {
+        if (!Actor)
+        {
+            continue;
+        }
+
+        float CurrentValue = 0.f;
+        if (GetBlueprintPropertyFloat(Actor, PropertyName, CurrentValue))
+        {
+            SetBlueprintPropertyFloat(Actor, PropertyName, CurrentValue * Multiplier);
+        }
+    }
+    
+    UE_LOG(LogTemp, Log, TEXT("Batch modified %d actors"), Actors.Num());
+}

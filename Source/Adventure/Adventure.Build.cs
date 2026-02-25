@@ -52,5 +52,16 @@ public class Adventure : ModuleRules
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 
 		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+		
+		// Editor-only modules for Blueprint manipulation utilities
+		if (Target.bBuildEditor)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[] { 
+				"UnrealEd",          // Core editor functionality
+				"Kismet",            // Blueprint editing utilities
+				"BlueprintGraph",    // Blueprint graph nodes
+				"AssetRegistry"      // Asset discovery and loading
+			});
+		}
 	}
 }

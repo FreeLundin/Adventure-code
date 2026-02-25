@@ -7,6 +7,7 @@
 #include "Core/AdventurePlayerState.h"
 #include "Core/PC_AdventureController.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/WorldSettings.h"
 #include "Curves/CurveFloat.h"
 #include "GameplayTagsManager.h"
 
@@ -33,10 +34,6 @@ AGM_AdventureMode::AGM_AdventureMode()
 	bGamePaused = false;
 	bGameOver = false;
 	bHUDVisible = true;
-
-	// Create root scene component
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-	DefaultSceneRoot = RootComponent;
 }
 
 void AGM_AdventureMode::BeginPlay()

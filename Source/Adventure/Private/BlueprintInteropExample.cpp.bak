@@ -1,0 +1,176 @@
+// BlueprintInteropExample.cpp
+
+#include "BlueprintInteropExample.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+
+ABlueprintInteropExample::ABlueprintInteropExample()
+{
+    PrimaryActorTick.bCanEverTick = true;
+    
+    // Initialize properties
+    CurrentHealth = MaxHealth;
+    CurrentState = ECharacterState::Idle;
+    bIsInvulnerable = false;
+    TimeSinceLastDamage = 0.f;
+}
+
+void ABlueprintInteropExample::BeginPlay()
+{
+    Super::BeginPlay();
+    
+    Initialize();
+}
+
+void ABlueprintInteropExample::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    
+    UpdateHealthRegen(DeltaTime);
+}
+
+void ABlueprintInteropExample::TakeDamage(float DamageAmount)
+{
+    if (bIsInvulnerable || CurrentState == ECharacterState::Dead)
+    {
+        return;
+    }
+
+    // Allow Blueprint to validate damage
+    if (OnDamageValidation.IsBound())
+    {
+        if (!OnDamageValidation.Execute(DamageAmount))
+        {
+            return; // Blueprint rejected the damage
+        }
+    }
+
+    const float OldHealth = CurrentHealth;
+    CurrentHealth = FMath::Max(0.f, CurrentHealth - DamageAmount);
+    TimeSinceLastDamage = 0.f;
+
+    // Broadcast delegate
+    OnHealthChangedEvent.Broadcast(CurrentHealth);
+    
+    // Call Blueprint implementable event
+    OnHealthChanged(GetHealthPercentage());
+
+    // Check if dead
+    if (CurrentHealth <= 0.f && OldHealth > 0.f)
+    {
+        ECharacterState OldState = CurrentState;
+        CurrentState = ECharacterState::Dead;
+        OnStateChangedEvent.Broadcast(OldState, CurrentState);
+        OnStateChanged(CurrentState);
+    }
+}
+
+float ABlueprintInteropExample::GetHealthPercentage() const
+{
+    return MaxHealth > 0.f ? (CurrentHealth / MaxHealth) : 0.f;
+}
+
+bool ABlueprintInteropExample::TryHeal(float HealAmount, bool bOverhealAllowed)
+{
+    if (CurrentState == ECharacterState::Dead)
+    {
+        return false;
+    }
+
+    const float OldHealth = CurrentHealth;
+    
+    if (bOverhealAllowed)
+    {
+        CurrentHealth += HealAmount;
+    }
+    else
+    {
+        CurrentHealth = FMath::Min(MaxHealth, CurrentHealth + HealAmount);
+    }
+
+    if (CurrentHealth != OldHealth)
+    {
+        OnHealthChangedEvent.Broadcast(CurrentHealth);
+        OnHealthChanged(GetHealthPercentage());
+        return true;
+    }
+
+    return false;
+}
+
+bool ABlueprintInteropExample::IsAlive() const
+{
+    return CurrentState != ECharacterState::Dead && CurrentHealth > 0.f;
+}
+
+void ABlueprintInteropExample::OnStateChanged_Implementation(ECharacterState NewState)
+{
+    // Default C++ implementation
+    UE_LOG(LogTemp, Log, TEXT("%s: State changed to %d"), *GetName(), static_cast<int32>(NewState));
+}
+
+ABlueprintInteropExample* ABlueprintInteropExample::FindNearestActor(const UObject* WorldContextObject, FVector Location)
+{
+    if (!WorldContextObject)
+    {
+        return nullptr;
+    }
+
+    UWorld* World = WorldContextObject->GetWorld();
+    if (!World)
+    {
+        return nullptr;
+    }
+
+    TArray<AActor*> FoundActors;
+    UGameplayStatics::GetAllActorsOfClass(World, ABlueprintInteropExample::StaticClass(), FoundActors);
+
+    ABlueprintInteropExample* NearestActor = nullptr;
+    float NearestDistance = FLT_MAX;
+
+    for (AActor* Actor : FoundActors)
+    {
+        float Distance = FVector::Distance(Location, Actor->GetActorLocation());
+        if (Distance < NearestDistance)
+        {
+            NearestDistance = Distance;
+            NearestActor = Cast<ABlueprintInteropExample>(Actor);
+        }
+    }
+
+    return NearestActor;
+}
+
+void ABlueprintInteropExample::ApplyDamageOverTime(float TotalDamage, float Duration, FName DamageType)
+{
+    // Implementation for damage over time
+    // This would typically use a timer to apply damage incrementally
+    UE_LOG(LogTemp, Log, TEXT("Applying %f %s damage over %f seconds"), 
+        TotalDamage, *DamageType.ToString(), Duration);
+}
+
+void ABlueprintInteropExample::Initialize_Implementation()
+{
+    // Default implementation
+    CurrentHealth = MaxHealth;
+    CurrentState = ECharacterState::Idle;
+    
+    UE_LOG(LogTemp, Log, TEXT("%s initialized"), *GetName());
+}
+
+void ABlueprintInteropExample::UpdateHealthRegen(float DeltaTime)
+{
+    if (CurrentState == ECharacterState::Dead || CurrentHealth >= MaxHealth)
+    {
+        return;
+    }
+
+    TimeSinceLastDamage += DeltaTime;
+
+    // Only regenerate if we haven't taken damage recently
+    if (TimeSinceLastDamage > 3.f)
+    {
+        float RegenRate = bUseCustomRegen ? CustomRegenRate : HealthRegenRate;
+        TryHeal(RegenRate * DeltaTime, false);
+    }
+}

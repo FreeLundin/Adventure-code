@@ -1,0 +1,226 @@
+// BlueprintRuntimeManager.h
+// USE CASE 2: Modifying Blueprint Instances at Runtime
+// This demonstrates how C++ can manipulate Blueprint-created actors and components at runtime
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Engine/Blueprint.h"
+#include "BlueprintRuntimeManager.generated.h"
+
+// Delegate for async Blueprint loading
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAsyncBlueprintLoaded, UClass*, LoadedClass);
+
+/**
+ * Manager class that demonstrates runtime manipulation of Blueprint instances
+ * This can modify Blueprint actors, access their properties, call their functions,
+ * and dynamically spawn Blueprint classes from C++
+ */
+UCLASS(Blueprintable)
+class ADVENTURE_API ABlueprintRuntimeManager : public AActor
+{
+    GENERATED_BODY()
+
+public:
+    ABlueprintRuntimeManager();
+
+    // ============================================================================
+    // SPAWNING BLUEPRINT ACTORS FROM C++
+    // ============================================================================
+
+    /**
+     * Spawn a Blueprint actor from a class reference
+     * Usage: Drag a Blueprint class into this property in the editor
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
+    TSubclassOf<AActor> BlueprintActorClass;
+
+    UFUNCTION(BlueprintCallable, Category = "Spawning")
+    AActor* SpawnBlueprintActor(FVector Location, FRotator Rotation);
+
+    /**
+     * Spawn Blueprint actor from asset path (soft reference)
+     * More flexible - can load Blueprint classes by path at runtime
+     */
+    UFUNCTION(BlueprintCallable, Category = "Spawning")
+    AActor* SpawnBlueprintActorFromPath(const FString& BlueprintPath, FVector Location, FRotator Rotation);
+
+    // ============================================================================
+    // ACCESSING BLUEPRINT PROPERTIES
+    // ============================================================================
+
+    /**
+     * Get a property value from a Blueprint instance by name
+     * This uses reflection to access any Blueprint property dynamically
+     */
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool GetBlueprintPropertyFloat(AActor* TargetActor, FName PropertyName, float& OutValue);
+
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool GetBlueprintPropertyInt(AActor* TargetActor, FName PropertyName, int32& OutValue);
+
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool GetBlueprintPropertyBool(AActor* TargetActor, FName PropertyName, bool& OutValue);
+
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool GetBlueprintPropertyString(AActor* TargetActor, FName PropertyName, FString& OutValue);
+
+    /**
+     * Set a property value on a Blueprint instance by name
+     */
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool SetBlueprintPropertyFloat(AActor* TargetActor, FName PropertyName, float Value);
+
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool SetBlueprintPropertyInt(AActor* TargetActor, FName PropertyName, int32 Value);
+
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool SetBlueprintPropertyBool(AActor* TargetActor, FName PropertyName, bool Value);
+
+    UFUNCTION(BlueprintCallable, Category = "Property Access")
+    bool SetBlueprintPropertyString(AActor* TargetActor, FName PropertyName, const FString& Value);
+
+    // ============================================================================
+    // CALLING BLUEPRINT FUNCTIONS
+    // ============================================================================
+
+    /**
+     * Call a Blueprint function by name using ProcessEvent
+     * This is the most flexible way to call Blueprint functions from C++
+     */
+    UFUNCTION(BlueprintCallable, Category = "Function Calling")
+    bool CallBlueprintFunction(UObject* TargetObject, FName FunctionName);
+
+    /**
+     * Call a Blueprint function with a single float parameter
+     */
+    UFUNCTION(BlueprintCallable, Category = "Function Calling")
+    bool CallBlueprintFunctionWithFloat(UObject* TargetObject, FName FunctionName, float Parameter);
+
+    /**
+     * Call a Blueprint function with multiple parameters
+     * Returns true if function was found and called
+     */
+    UFUNCTION(BlueprintCallable, Category = "Function Calling")
+    bool CallBlueprintFunctionWithParams(UObject* TargetObject, FName FunctionName, 
+        float FloatParam, int32 IntParam, bool BoolParam);
+
+    /**
+     * Call a Blueprint function and get a return value
+     */
+    UFUNCTION(BlueprintCallable, Category = "Function Calling")
+    bool CallBlueprintFunctionWithReturn(UObject* TargetObject, FName FunctionName, float& OutReturnValue);
+
+    // ============================================================================
+    // ACCESSING BLUEPRINT COMPONENTS
+    // ============================================================================
+
+    /**
+     * Get a component from a Blueprint actor by name
+     * Useful for accessing Blueprint-added components
+     */
+    UFUNCTION(BlueprintCallable, Category = "Components")
+    UActorComponent* GetBlueprintComponentByName(AActor* TargetActor, FName ComponentName);
+
+    /**
+     * Get all components of a specific type from a Blueprint actor
+     */
+    UFUNCTION(BlueprintCallable, Category = "Components")
+    TArray<UActorComponent*> GetBlueprintComponentsByClass(AActor* TargetActor, TSubclassOf<UActorComponent> ComponentClass);
+
+    /**
+     * Add a component to a Blueprint actor at runtime
+     */
+    UFUNCTION(BlueprintCallable, Category = "Components")
+    UActorComponent* AddComponentToBlueprintActor(AActor* TargetActor, TSubclassOf<UActorComponent> ComponentClass, FName ComponentName);
+
+    // ============================================================================
+    // FINDING AND FILTERING BLUEPRINT INSTANCES
+    // ============================================================================
+
+    /**
+     * Find all instances of a specific Blueprint class in the world
+     */
+    UFUNCTION(BlueprintCallable, Category = "Finding", meta = (WorldContext = "WorldContextObject"))
+    static TArray<AActor*> FindAllBlueprintInstances(const UObject* WorldContextObject, TSubclassOf<AActor> BlueprintClass);
+
+    /**
+     * Find Blueprint instances with a specific property value
+     */
+    UFUNCTION(BlueprintCallable, Category = "Finding", meta = (WorldContext = "WorldContextObject"))
+    static TArray<AActor*> FindBlueprintInstancesWithTag(const UObject* WorldContextObject, 
+        TSubclassOf<AActor> BlueprintClass, FName Tag);
+
+    // ============================================================================
+    // BLUEPRINT INTERFACE INTERACTION
+    // ============================================================================
+
+    /**
+     * Check if an actor implements a Blueprint Interface
+     */
+    UFUNCTION(BlueprintCallable, Category = "Interfaces")
+    bool DoesBlueprintImplementInterface(AActor* TargetActor, TSubclassOf<UInterface> InterfaceClass);
+
+    /**
+     * Execute a Blueprint Interface function on an actor
+     * This is type-safe and the preferred method for interface calls
+     */
+    template<typename InterfaceType>
+    bool ExecuteBlueprintInterface(AActor* TargetActor);
+
+    // ============================================================================
+    // DYNAMIC BLUEPRINT CLASS LOADING
+    // ============================================================================
+
+    /**
+     * Load a Blueprint class dynamically from a path
+     * Path format: "/Game/Blueprints/BP_MyActor.BP_MyActor_C"
+     */
+    UFUNCTION(BlueprintCallable, Category = "Loading")
+    static UClass* LoadBlueprintClass(const FString& BlueprintPath);
+
+    /**
+     * Load a Blueprint class asynchronously (non-blocking)
+     */
+    UFUNCTION(BlueprintCallable, Category = "Loading")
+    void LoadBlueprintClassAsync(const FString& BlueprintPath);
+
+    UPROPERTY(BlueprintAssignable, Category = "Loading")
+    FOnAsyncBlueprintLoaded OnBlueprintClassLoaded;
+
+    // ============================================================================
+    // BLUEPRINT INSTANCE MANIPULATION EXAMPLES
+    // ============================================================================
+
+    /**
+     * Example: Modify all Blueprint instances of a type in the world
+     */
+    UFUNCTION(BlueprintCallable, Category = "Examples")
+    void ModifyAllBlueprintInstances(TSubclassOf<AActor> BlueprintClass, FName PropertyName, float NewValue);
+
+    /**
+     * Example: Clone a Blueprint actor (spawn duplicate with same properties)
+     */
+    UFUNCTION(BlueprintCallable, Category = "Examples")
+    AActor* CloneBlueprintActor(AActor* SourceActor);
+
+    /**
+     * Example: Batch modify multiple Blueprint actors
+     */
+    UFUNCTION(BlueprintCallable, Category = "Examples")
+    void BatchModifyBlueprintActors(const TArray<AActor*>& Actors, FName PropertyName, float Multiplier);
+
+protected:
+    virtual void BeginPlay() override;
+
+private:
+    // Helper function to find property by name
+    FProperty* FindPropertyByName(UObject* Object, FName PropertyName);
+    
+    // Helper function to find function by name
+    UFunction* FindFunctionByName(UObject* Object, FName FunctionName);
+
+    // Async loading delegate
+    void OnBlueprintAsyncLoadCompleted(const FString& BlueprintPath);
+};

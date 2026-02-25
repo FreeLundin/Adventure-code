@@ -9,6 +9,7 @@
 #include "AbilitySystemComponent.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "AttributeSet.h"
 
 void UWB_HUD::NativeConstruct()
 {
@@ -81,7 +82,8 @@ UAdventureAttributeSet* UWB_HUD::GetCharacterAttributeSet() const
 	}
 
 	// Get AttributeSet from ASC
-	return Cast<UAdventureAttributeSet>(PlayerState->GetAbilitySystemComponent()->GetAttributeSet(UAdventureAttributeSet::StaticClass()));
+	const UAttributeSet* ConstAttrSet = PlayerState->GetAbilitySystemComponent()->GetAttributeSet(UAdventureAttributeSet::StaticClass());
+	return Cast<UAdventureAttributeSet>(const_cast<UAttributeSet*>(ConstAttrSet));
 }
 
 void UWB_HUD::BindToAttributeSet()
@@ -100,11 +102,10 @@ void UWB_HUD::BindToAttributeSet()
 
 	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
 
-	// Bind to attribute change delegates
-	// These are triggered whenever the attribute is modified
-	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetHealthAttribute()).AddDynamic(this, &UWB_HUD::OnHealthChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetStaminaAttribute()).AddDynamic(this, &UWB_HUD::OnStaminaChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetRitualEnergyAttribute()).AddDynamic(this, &UWB_HUD::OnRitualEnergyChanged);
+	// Bind to attribute change delegates (note: using AddUObject for FOnAttributeChangeData delegates)
+	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetHealthAttribute()).AddUObject(this, &UWB_HUD::OnHealthChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetStaminaAttribute()).AddUObject(this, &UWB_HUD::OnStaminaChanged);
+	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetRitualEnergyAttribute()).AddUObject(this, &UWB_HUD::OnRitualEnergyChanged);
 
 	UE_LOG(LogTemp, Log, TEXT("UWB_HUD::BindToAttributeSet - Bound to all attribute delegates"));
 }
@@ -124,42 +125,48 @@ void UWB_HUD::UnbindFromAttributeSet()
 
 	UAbilitySystemComponent* ASC = PlayerState->GetAbilitySystemComponent();
 
-	// Unbind from all delegates
-	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetHealthAttribute()).RemoveDynamic(this, &UWB_HUD::OnHealthChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetStaminaAttribute()).RemoveDynamic(this, &UWB_HUD::OnStaminaChanged);
-	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetRitualEnergyAttribute()).RemoveDynamic(this, &UWB_HUD::OnRitualEnergyChanged);
+	// Unbind from all delegates (using RemoveAll since we used AddUObject)
+	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetHealthAttribute()).RemoveAll(this);
+	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetStaminaAttribute()).RemoveAll(this);
+	ASC->GetGameplayAttributeValueChangeDelegate(CachedAttributeSet->GetRitualEnergyAttribute()).RemoveAll(this);
 
 	UE_LOG(LogTemp, Log, TEXT("UWB_HUD::UnbindFromAttributeSet - Unbound from all attribute delegates"));
 }
 
-void UWB_HUD::OnHealthChanged(float NewHealth, float MaxHealth)
+void UWB_HUD::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
 	if (bUpdatingUI)
 	{
 		return; // Prevent recursive updates
 	}
 
-	UpdateHealthBar(NewHealth, MaxHealth);
+	// Get max health from AttributeSet
+	float MaxHealth = CachedAttributeSet ? CachedAttributeSet->GetMaxHealth() : 100.0f;
+	UpdateHealthBar(Data.NewValue, MaxHealth);
 }
 
-void UWB_HUD::OnStaminaChanged(float NewStamina, float MaxStamina)
+void UWB_HUD::OnStaminaChanged(const FOnAttributeChangeData& Data)
 {
 	if (bUpdatingUI)
 	{
 		return;
 	}
 
-	UpdateStaminaBar(NewStamina, MaxStamina);
+	// Get max stamina from AttributeSet
+	float MaxStamina = CachedAttributeSet ? CachedAttributeSet->GetMaxStamina() : 100.0f;
+	UpdateStaminaBar(Data.NewValue, MaxStamina);
 }
 
-void UWB_HUD::OnRitualEnergyChanged(float NewRitualEnergy, float MaxRitualEnergy)
+void UWB_HUD::OnRitualEnergyChanged(const FOnAttributeChangeData& Data)
 {
 	if (bUpdatingUI)
 	{
 		return;
 	}
 
-	UpdateRitualEnergyBar(NewRitualEnergy, MaxRitualEnergy);
+	// Get max ritual energy from AttributeSet
+	float MaxRitual = CachedAttributeSet ? CachedAttributeSet->GetMaxRitualEnergy() : 100.0f;
+	UpdateRitualEnergyBar(Data.NewValue, MaxRitual);
 }
 
 void UWB_HUD::RefreshAllBars()

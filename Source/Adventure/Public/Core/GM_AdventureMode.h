@@ -214,12 +214,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Game|Audio")
 	void PlayGameAudioEvent(FGameplayTag AudioTag, float VolumeMultiplier = 1.0f);
 
-	// ===== COMPONENT =====
-
-	/** Root scene component for default actor transformation */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Default")
-	TObjectPtr<USceneComponent> DefaultSceneRoot;
-
 	// ===== GAME CONFIGURATION (Tunable) =====
 
 	/** Multiplier applied to all incoming damage (difficulty/balance tuning) */

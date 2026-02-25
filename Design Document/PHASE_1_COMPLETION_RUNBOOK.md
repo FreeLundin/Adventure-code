@@ -36,7 +36,8 @@ Before starting, verify:
    Tools → Python Console
 
 3. Execute asset creation script:
-   exec("C:/Unreal_Projects/Adventure/scripts/create_enhanced_input_assets.py")
+   import runpy
+   runpy.run_path("C:/Unreal_Projects/Adventure/scripts/create_enhanced_input_assets.py")
 
 4. Wait for completion message (should take 10-30 seconds)
    ✅ Should see: "Created IMC_Adventure" + "Created IA_*" actions

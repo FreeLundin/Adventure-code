@@ -12,6 +12,8 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"
+#include "Character/MultiPerspectiveCameraComponent.h"
+#include "GAS/RitualEnergyManagerComponent.h"
 
 ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 {
@@ -196,8 +198,10 @@ void ACBP_AdventureCharacter::UpdateRotation_PreCMC()
 	FRotator CurrentRotation = GetActorRotation();
 	const float RotationSpeed = 10.0f; // Degrees per...tick? (will need tuning)
 	
-	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, DesiredRotation, GetWorld()->DeltaTimeSeconds, RotationSpeed);
-	SetActorRotation(NewRotation);
+	// TODO: Fix GetWorld() access - this needs DeltaTime parameter passed to this function
+	// For now, this is incomplete placeholder code
+	// FRotator NewRotation = FMath::RInterpTo(CurrentRotation, DesiredRotation, GetWorld()->DeltaTimeSeconds, RotationSpeed);
+	// SetActorRotation(NewRotation);
 
 	// TODO: Clamp rotation based on camera style:
 	//   - Top-Down: Allow full 360 rotation
@@ -375,6 +379,33 @@ void ACBP_AdventureCharacter::UpdatedMovementSimulated(FVector OldVelocity, bool
 void ACBP_AdventureCharacter::PlayAudioEvent(FGameplayTag Value, float VolumeMultiplier, float PitchMultiplier)
 {
 	// TODO: Play audio event with optional volume/pitch modulation
+}
+
+void ACBP_AdventureCharacter::ToggleCameraMode()
+{
+	// Cycle through camera modes via CameraManager component
+	if (CameraManager)
+	{
+		CameraManager->CycleCamera();
+		
+		// Update CameraStyle property to reflect new mode
+		// (CameraManager internally manages the camera style state)
+		UE_LOG(LogTemp, Log, TEXT("ACBP_AdventureCharacter::ToggleCameraMode - Camera cycled"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ACBP_AdventureCharacter::ToggleCameraMode - CameraManager component not initialized"));
+	}
+}
+
+UMultiPerspectiveCameraComponent* ACBP_AdventureCharacter::GetCameraManager() const
+{
+	return CameraManager;
+}
+
+URitualEnergyManagerComponent* ACBP_AdventureCharacter::GetRitualEnergyManager() const
+{
+	return RitualEnergyManager;
 }
 
 void ACBP_AdventureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

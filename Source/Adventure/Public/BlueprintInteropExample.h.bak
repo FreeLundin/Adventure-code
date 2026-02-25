@@ -1,0 +1,206 @@
+// BlueprintInteropExample.h
+// USE CASE 1: Exposing C++ Classes to Blueprint
+// This demonstrates all the ways to make C++ code accessible in Blueprint graphs
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "BlueprintInteropExample.generated.h"
+
+/**
+ * Enum example - Blueprint-accessible enumeration
+ */
+UENUM(BlueprintType)
+enum class ECharacterState : uint8
+{
+    Idle        UMETA(DisplayName = "Idle"),
+    Walking     UMETA(DisplayName = "Walking"),
+    Running     UMETA(DisplayName = "Running"),
+    Jumping     UMETA(DisplayName = "Jumping"),
+    Dead        UMETA(DisplayName = "Dead")
+};
+
+/**
+ * Struct example - Blueprint-accessible structure
+ */
+USTRUCT(BlueprintType)
+struct FCharacterStats
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float Health = 100.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float Stamina = 100.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float MaxSpeed = 600.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    int32 Level = 1;
+};
+
+/**
+ * Delegate examples - Blueprint-callable events
+ */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float, NewHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStateChanged, ECharacterState, OldState, ECharacterState, NewState);
+DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(bool, FOnDamageValidation, float, DamageAmount);
+
+/**
+ * Main example actor demonstrating comprehensive C++ to Blueprint exposure
+ */
+UCLASS(Blueprintable, BlueprintType)
+class ADVENTURE_API ABlueprintInteropExample : public AActor
+{
+    GENERATED_BODY()
+
+public:
+    ABlueprintInteropExample();
+
+    // ============================================================================
+    // PROPERTIES - Different visibility and editability options
+    // ============================================================================
+
+    // EditAnywhere - Editable in both Blueprint defaults and level instances
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float MaxHealth = 100.f;
+
+    // EditDefaultsOnly - Only editable in Blueprint Class Defaults, not instances
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats")
+    float HealthRegenRate = 5.f;
+
+    // EditInstanceOnly - Only editable on placed instances, not Blueprint defaults
+    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category = "Instance")
+    FName UniqueIdentifier;
+
+    // VisibleAnywhere - Visible but not editable (read-only in editor)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Runtime")
+    float CurrentHealth;
+
+    // BlueprintReadWrite - Can read and write from Blueprint graphs
+    UPROPERTY(BlueprintReadWrite, Category = "State")
+    ECharacterState CurrentState;
+
+    // BlueprintReadOnly - Can only read from Blueprint graphs
+    UPROPERTY(BlueprintReadOnly, Category = "State")
+    bool bIsInvulnerable;
+
+    // Struct property
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    FCharacterStats Stats;
+
+    // Array property
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buffs")
+    TArray<FName> ActiveBuffs;
+
+    // Map property
+    UPROPERTY(BlueprintReadWrite, Category = "Inventory")
+    TMap<FName, int32> Inventory;
+
+    // ============================================================================
+    // FUNCTIONS - Different Blueprint callable types
+    // ============================================================================
+
+    // BlueprintCallable - Can be called from Blueprint graphs
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    void TakeDamage(float DamageAmount);
+
+    // BlueprintPure - Pure function (no execution pins, only returns value)
+    UFUNCTION(BlueprintPure, Category = "Stats")
+    float GetHealthPercentage() const;
+
+    // BlueprintCallable with return value and multiple parameters
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    bool TryHeal(float HealAmount, bool bOverhealAllowed = false);
+
+    // Const function accessible in Blueprint
+    UFUNCTION(BlueprintPure, Category = "State")
+    bool IsAlive() const;
+
+    // BlueprintImplementableEvent - Implemented in Blueprint (no C++ body)
+    UFUNCTION(BlueprintImplementableEvent, Category = "Events")
+    void OnHealthChanged(float NewHealthPercentage);
+
+    // BlueprintNativeEvent - Can be implemented in Blueprint OR C++ (has default C++ implementation)
+    UFUNCTION(BlueprintNativeEvent, Category = "Events")
+    void OnStateChanged(ECharacterState NewState);
+    // C++ implementation must be named: FunctionName_Implementation
+    virtual void OnStateChanged_Implementation(ECharacterState NewState);
+
+    // Static function - Can be called without an instance
+    UFUNCTION(BlueprintCallable, Category = "Utility", meta = (WorldContext = "WorldContextObject"))
+    static ABlueprintInteropExample* FindNearestActor(const UObject* WorldContextObject, FVector Location);
+
+    // Function with advanced metadata
+    UFUNCTION(BlueprintCallable, Category = "Combat", 
+        meta = (DisplayName = "Apply Damage Over Time", 
+                Keywords = "damage dot tick",
+                AdvancedDisplay = "DamageType",
+                ToolTip = "Applies damage over a specified duration"))
+    void ApplyDamageOverTime(float TotalDamage, float Duration, FName DamageType = "Fire");
+
+    // ============================================================================
+    // DELEGATES/EVENTS - Blueprint-bindable events
+    // ============================================================================
+
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnHealthChanged OnHealthChangedEvent;
+
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnStateChanged OnStateChangedEvent;
+
+    // Delegate that Blueprint can implement/override (not BlueprintAssignable for single-cast)
+    UPROPERTY()
+    FOnDamageValidation OnDamageValidation;
+
+    // ============================================================================
+    // BLUEPRINT OVERRIDABLE FUNCTIONS
+    // ============================================================================
+
+    // Virtual function that can be overridden in C++ or Blueprint
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Lifecycle")
+    void Initialize();
+    virtual void Initialize_Implementation();
+
+    // ============================================================================
+    // ADVANCED METADATA OPTIONS
+    // ============================================================================
+
+    // ClampMin/ClampMax - Restricts value range in editor
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", 
+        meta = (ClampMin = "0.0", ClampMax = "1000.0"))
+    float MaxStamina = 100.f;
+
+    // EditCondition - Only editable if condition is true
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Advanced")
+    bool bUseCustomRegen;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Advanced", 
+        meta = (EditCondition = "bUseCustomRegen"))
+    float CustomRegenRate = 10.f;
+
+    // InlineEditConditionToggle - Creates checkbox next to property
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Features", 
+        meta = (InlineEditConditionToggle))
+    bool bEnableShield;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Features", 
+        meta = (EditCondition = "bEnableShield"))
+    float ShieldStrength = 50.f;
+
+protected:
+    virtual void BeginPlay() override;
+
+public:
+    virtual void Tick(float DeltaTime) override;
+
+private:
+    // Private members not exposed to Blueprint
+    float TimeSinceLastDamage;
+    
+    // Helper function not exposed to Blueprint
+    void UpdateHealthRegen(float DeltaTime);
+};

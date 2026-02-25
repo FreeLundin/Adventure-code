@@ -1,0 +1,974 @@
+// BlueprintEditorUtilities.cpp
+
+#include "BlueprintEditorUtilities.h"
+
+#if WITH_EDITOR
+
+#include "Engine/Blueprint.h"
+#include "Engine/BlueprintGeneratedClass.h"
+#include "Engine/SimpleConstructionScript.h"
+#include "Engine/SCS_Node.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/CompilerResultsLog.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Factories/BlueprintFactory.h"
+#include "UObject/SavePackage.h"
+#include "Misc/PackageName.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+
+// ============================================================================
+// CREATING NEW BLUEPRINT ASSETS
+// ============================================================================
+
+UBlueprint* UBlueprintEditorUtilities::CreateNewBlueprint(const FString& PackagePath, const FString& BlueprintName, UClass* ParentClass)
+{
+    if (!ParentClass)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Parent class is null!"));
+        return nullptr;
+    }
+
+    // Create package for the new Blueprint
+    FString PackageName = PackagePath + BlueprintName;
+    UPackage* Package = CreatePackage(*PackageName);
+    
+    if (!Package)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to create package: %s"), *PackageName);
+        return nullptr;
+    }
+
+    // Create the Blueprint
+    UBlueprint* NewBlueprint = FKismetEditorUtilities::CreateBlueprint(
+        ParentClass,
+        Package,
+        FName(*BlueprintName),
+        BPTYPE_Normal,
+        UBlueprint::StaticClass(),
+        UBlueprintGeneratedClass::StaticClass(),
+        NAME_None
+    );
+
+    if (NewBlueprint)
+    {
+        // Mark as modified
+        NewBlueprint->MarkPackageDirty();
+        
+        // Compile
+        FKismetEditorUtilities::CompileBlueprint(NewBlueprint);
+        
+        // Notify asset registry
+        FAssetRegistryModule::AssetCreated(NewBlueprint);
+        
+        UE_LOG(LogTemp, Log, TEXT("Created Blueprint: %s"), *BlueprintName);
+    }
+
+    return NewBlueprint;
+}
+
+UBlueprint* UBlueprintEditorUtilities::CreateBlueprintInterface(const FString& PackagePath, const FString& InterfaceName)
+{
+    FString PackageName = PackagePath + InterfaceName;
+    UPackage* Package = CreatePackage(*PackageName);
+    
+    if (!Package)
+    {
+        return nullptr;
+    }
+
+    UBlueprint* NewInterface = FKismetEditorUtilities::CreateBlueprint(
+        UInterface::StaticClass(),
+        Package,
+        FName(*InterfaceName),
+        BPTYPE_Interface,
+        UBlueprint::StaticClass(),
+        UBlueprintGeneratedClass::StaticClass(),
+        NAME_None
+    );
+
+    if (NewInterface)
+    {
+        NewInterface->MarkPackageDirty();
+        FAssetRegistryModule::AssetCreated(NewInterface);
+        
+        UE_LOG(LogTemp, Log, TEXT("Created Blueprint Interface: %s"), *InterfaceName);
+    }
+
+    return NewInterface;
+}
+
+UBlueprint* UBlueprintEditorUtilities::CreateBlueprintFunctionLibrary(const FString& PackagePath, const FString& LibraryName)
+{
+    FString PackageName = PackagePath + LibraryName;
+    UPackage* Package = CreatePackage(*PackageName);
+    
+    if (!Package)
+    {
+        return nullptr;
+    }
+
+    UBlueprint* NewLibrary = FKismetEditorUtilities::CreateBlueprint(
+        UBlueprintFunctionLibrary::StaticClass(),
+        Package,
+        FName(*LibraryName),
+        BPTYPE_FunctionLibrary,
+        UBlueprint::StaticClass(),
+        UBlueprintGeneratedClass::StaticClass(),
+        NAME_None
+    );
+
+    if (NewLibrary)
+    {
+        NewLibrary->MarkPackageDirty();
+        FKismetEditorUtilities::CompileBlueprint(NewLibrary);
+        FAssetRegistryModule::AssetCreated(NewLibrary);
+        
+        UE_LOG(LogTemp, Log, TEXT("Created Blueprint Function Library: %s"), *LibraryName);
+    }
+
+    return NewLibrary;
+}
+
+UBlueprint* UBlueprintEditorUtilities::DuplicateBlueprint(UBlueprint* SourceBlueprint, const FString& NewPackagePath, const FString& NewName)
+{
+    if (!SourceBlueprint)
+    {
+        return nullptr;
+    }
+
+    FString PackageName = NewPackagePath + NewName;
+    UPackage* Package = CreatePackage(*PackageName);
+    
+    if (!Package)
+    {
+        return nullptr;
+    }
+
+    UBlueprint* DuplicatedBlueprint = DuplicateObject<UBlueprint>(SourceBlueprint, Package, FName(*NewName));
+    
+    if (DuplicatedBlueprint)
+    {
+        DuplicatedBlueprint->MarkPackageDirty();
+        FKismetEditorUtilities::CompileBlueprint(DuplicatedBlueprint);
+        FAssetRegistryModule::AssetCreated(DuplicatedBlueprint);
+        
+        UE_LOG(LogTemp, Log, TEXT("Duplicated Blueprint: %s"), *NewName);
+    }
+
+    return DuplicatedBlueprint;
+}
+
+// ============================================================================
+// ADDING COMPONENTS
+// ============================================================================
+
+bool UBlueprintEditorUtilities::AddComponentToBlueprint(UBlueprint* Blueprint, TSubclassOf<UActorComponent> ComponentClass, const FString& ComponentName)
+{
+    if (!Blueprint || !ComponentClass)
+    {
+        return false;
+    }
+
+    USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+    if (!SCS)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Blueprint has no SimpleConstructionScript"));
+        return false;
+    }
+
+    // Create new SCS node
+    USCS_Node* NewNode = SCS->CreateNode(ComponentClass, FName(*ComponentName));
+    
+    if (!NewNode)
+    {
+        return false;
+    }
+
+    // Add to root nodes
+    SCS->AddNode(NewNode);
+
+    // Mark as modified and recompile
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added component '%s' to Blueprint '%s'"), *ComponentName, *Blueprint->GetName());
+    return true;
+}
+
+bool UBlueprintEditorUtilities::AddStaticMeshComponentToBlueprint(UBlueprint* Blueprint, const FString& ComponentName, UStaticMesh* Mesh)
+{
+    if (!Blueprint || !Mesh)
+    {
+        return false;
+    }
+
+    if (!AddComponentToBlueprint(Blueprint, UStaticMeshComponent::StaticClass(), ComponentName))
+    {
+        return false;
+    }
+
+    // Find the component we just created and set the mesh
+    USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+    if (SCS)
+    {
+        for (USCS_Node* Node : SCS->GetAllNodes())
+        {
+            if (Node->GetVariableName() == FName(*ComponentName))
+            {
+                UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Node->ComponentTemplate);
+                if (SMC)
+                {
+                    SMC->SetStaticMesh(Mesh);
+                    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool UBlueprintEditorUtilities::AddSkeletalMeshComponentToBlueprint(UBlueprint* Blueprint, const FString& ComponentName, USkeletalMesh* SkeletalMesh)
+{
+    if (!Blueprint || !SkeletalMesh)
+    {
+        return false;
+    }
+
+    if (!AddComponentToBlueprint(Blueprint, USkeletalMeshComponent::StaticClass(), ComponentName))
+    {
+        return false;
+    }
+
+    USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+    if (SCS)
+    {
+        for (USCS_Node* Node : SCS->GetAllNodes())
+        {
+            if (Node->GetVariableName() == FName(*ComponentName))
+            {
+                USkeletalMeshComponent* SKC = Cast<USkeletalMeshComponent>(Node->ComponentTemplate);
+                if (SKC)
+                {
+                    SKC->SetSkeletalMesh(SkeletalMesh);
+                    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool UBlueprintEditorUtilities::RemoveComponentFromBlueprint(UBlueprint* Blueprint, const FString& ComponentName)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    USimpleConstructionScript* SCS = Blueprint->SimpleConstructionScript;
+    if (!SCS)
+    {
+        return false;
+    }
+
+    for (USCS_Node* Node : SCS->GetAllNodes())
+    {
+        if (Node->GetVariableName() == FName(*ComponentName))
+        {
+            SCS->RemoveNode(Node);
+            FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+            
+            UE_LOG(LogTemp, Log, TEXT("Removed component '%s' from Blueprint"), *ComponentName);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ============================================================================
+// ADDING VARIABLES
+// ============================================================================
+
+bool UBlueprintEditorUtilities::AddFloatVariable(UBlueprint* Blueprint, const FString& VariableName, float DefaultValue)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FEdGraphPinType PinType;
+    PinType.PinCategory = UEdGraphSchema_K2::PC_Real;
+    PinType.PinSubCategory = UEdGraphSchema_K2::PC_Float;
+
+    FName VarName = FBlueprintEditorUtils::FindUniqueKismetName(Blueprint, VariableName);
+    FBlueprintEditorUtils::AddMemberVariable(Blueprint, VarName, PinType);
+
+    // Set default value
+    UClass* GeneratedClass = Blueprint->GeneratedClass;
+    if (GeneratedClass)
+    {
+        FProperty* Property = GeneratedClass->FindPropertyByName(VarName);
+        if (Property)
+        {
+            FFloatProperty* FloatProp = CastField<FFloatProperty>(Property);
+            if (FloatProp)
+            {
+                UObject* CDO = GeneratedClass->GetDefaultObject();
+                FloatProp->SetPropertyValue_InContainer(CDO, DefaultValue);
+            }
+        }
+    }
+
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added float variable '%s' to Blueprint"), *VariableName);
+    return true;
+}
+
+bool UBlueprintEditorUtilities::AddIntVariable(UBlueprint* Blueprint, const FString& VariableName, int32 DefaultValue)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FEdGraphPinType PinType;
+    PinType.PinCategory = UEdGraphSchema_K2::PC_Int;
+
+    FName VarName = FBlueprintEditorUtils::FindUniqueKismetName(Blueprint, VariableName);
+    FBlueprintEditorUtils::AddMemberVariable(Blueprint, VarName, PinType);
+
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added int variable '%s' to Blueprint"), *VariableName);
+    return true;
+}
+
+bool UBlueprintEditorUtilities::AddBoolVariable(UBlueprint* Blueprint, const FString& VariableName, bool DefaultValue)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FEdGraphPinType PinType;
+    PinType.PinCategory = UEdGraphSchema_K2::PC_Boolean;
+
+    FName VarName = FBlueprintEditorUtils::FindUniqueKismetName(Blueprint, VariableName);
+    FBlueprintEditorUtils::AddMemberVariable(Blueprint, VarName, PinType);
+
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added bool variable '%s' to Blueprint"), *VariableName);
+    return true;
+}
+
+bool UBlueprintEditorUtilities::AddStringVariable(UBlueprint* Blueprint, const FString& VariableName, const FString& DefaultValue)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FEdGraphPinType PinType;
+    PinType.PinCategory = UEdGraphSchema_K2::PC_String;
+
+    FName VarName = FBlueprintEditorUtils::FindUniqueKismetName(Blueprint, VariableName);
+    FBlueprintEditorUtils::AddMemberVariable(Blueprint, VarName, PinType);
+
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added string variable '%s' to Blueprint"), *VariableName);
+    return true;
+}
+
+bool UBlueprintEditorUtilities::AddObjectVariable(UBlueprint* Blueprint, const FString& VariableName, UClass* ObjectClass)
+{
+    if (!Blueprint || !ObjectClass)
+    {
+        return false;
+    }
+
+    FEdGraphPinType PinType;
+    PinType.PinCategory = UEdGraphSchema_K2::PC_Object;
+    PinType.PinSubCategoryObject = ObjectClass;
+
+    FName VarName = FBlueprintEditorUtils::FindUniqueKismetName(Blueprint, VariableName);
+    FBlueprintEditorUtils::AddMemberVariable(Blueprint, VarName, PinType);
+
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added object variable '%s' to Blueprint"), *VariableName);
+    return true;
+}
+
+bool UBlueprintEditorUtilities::AddArrayVariable(UBlueprint* Blueprint, const FString& VariableName, const FString& InnerType)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FEdGraphPinType PinType;
+    PinType.ContainerType = EPinContainerType::Array;
+    
+    // Set inner type based on string
+    if (InnerType == "Float")
+    {
+        PinType.PinCategory = UEdGraphSchema_K2::PC_Real;
+        PinType.PinSubCategory = UEdGraphSchema_K2::PC_Float;
+    }
+    else if (InnerType == "Int")
+    {
+        PinType.PinCategory = UEdGraphSchema_K2::PC_Int;
+    }
+    else if (InnerType == "String")
+    {
+        PinType.PinCategory = UEdGraphSchema_K2::PC_String;
+    }
+    else
+    {
+        PinType.PinCategory = UEdGraphSchema_K2::PC_String; // Default
+    }
+
+    FName VarName = FBlueprintEditorUtils::FindUniqueKismetName(Blueprint, VariableName);
+    FBlueprintEditorUtils::AddMemberVariable(Blueprint, VarName, PinType);
+
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added array variable '%s' to Blueprint"), *VariableName);
+    return true;
+}
+
+FBPVariableDescription* UBlueprintEditorUtilities::FindVariable(UBlueprint* Blueprint, const FName& VariableName)
+{
+    if (!Blueprint)
+    {
+        return nullptr;
+    }
+
+    for (FBPVariableDescription& Variable : Blueprint->NewVariables)
+    {
+        if (Variable.VarName == VariableName)
+        {
+            return &Variable;
+        }
+    }
+
+    return nullptr;
+}
+
+bool UBlueprintEditorUtilities::SetVariableMetadata(UBlueprint* Blueprint, const FString& VariableName, 
+    bool bEditAnywhere, bool bBlueprintReadOnly, const FString& Category)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FBPVariableDescription* Variable = FindVariable(Blueprint, FName(*VariableName));
+    if (!Variable)
+    {
+        return false;
+    }
+
+    // Set property flags
+    if (bEditAnywhere)
+    {
+        Variable->PropertyFlags |= CPF_Edit;
+    }
+
+    if (bBlueprintReadOnly)
+    {
+        Variable->PropertyFlags |= CPF_BlueprintReadOnly;
+    }
+    else
+    {
+        Variable->PropertyFlags &= ~CPF_BlueprintReadOnly;
+    }
+
+    // Set category
+    if (!Category.IsEmpty())
+    {
+        Variable->Category = FText::FromString(Category);
+    }
+
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    return true;
+}
+
+bool UBlueprintEditorUtilities::RemoveVariable(UBlueprint* Blueprint, const FString& VariableName)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FName VarName(*VariableName);
+    FBlueprintEditorUtils::RemoveMemberVariable(Blueprint, VarName);
+    
+    UE_LOG(LogTemp, Log, TEXT("Removed variable '%s' from Blueprint"), *VariableName);
+    return true;
+}
+
+// ============================================================================
+// FUNCTIONS
+// ============================================================================
+
+bool UBlueprintEditorUtilities::AddFunction(UBlueprint* Blueprint, const FString& FunctionName)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    UEdGraph* NewGraph = FBlueprintEditorUtils::CreateNewGraph(
+        Blueprint,
+        FName(*FunctionName),
+        UEdGraph::StaticClass(),
+        UEdGraphSchema_K2::StaticClass()
+    );
+
+    if (NewGraph)
+    {
+        FBlueprintEditorUtils::AddFunctionGraph(Blueprint, NewGraph, true, nullptr);
+        FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+        
+        UE_LOG(LogTemp, Log, TEXT("Added function '%s' to Blueprint"), *FunctionName);
+        return true;
+    }
+
+    return false;
+}
+
+bool UBlueprintEditorUtilities::AddFunctionOverride(UBlueprint* Blueprint, const FString& FunctionName)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    UClass* ParentClass = Blueprint->ParentClass;
+    if (!ParentClass)
+    {
+        return false;
+    }
+
+    UFunction* ParentFunction = ParentClass->FindFunctionByName(FName(*FunctionName));
+    if (!ParentFunction)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Function '%s' not found in parent class"), *FunctionName);
+        return false;
+    }
+
+    UEdGraph* NewGraph = FBlueprintEditorUtils::CreateNewGraph(
+        Blueprint,
+        ParentFunction->GetFName(),
+        UEdGraph::StaticClass(),
+        UEdGraphSchema_K2::StaticClass()
+    );
+
+    if (NewGraph)
+    {
+        FBlueprintEditorUtils::AddFunctionGraph(Blueprint, NewGraph, false, ParentFunction);
+        FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+        
+        UE_LOG(LogTemp, Log, TEXT("Added function override '%s' to Blueprint"), *FunctionName);
+        return true;
+    }
+
+    return false;
+}
+
+bool UBlueprintEditorUtilities::AddCustomEvent(UBlueprint* Blueprint, const FString& EventName)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    // Custom events are stored in the event graph
+    TArray<UEdGraph*> EventGraphs;
+    FBlueprintEditorUtils::GetAllGraphsOfClass(Blueprint, UEdGraph::StaticClass(), EventGraphs);
+
+    if (EventGraphs.Num() > 0)
+    {
+        UEdGraph* EventGraph = EventGraphs[0];
+        FName UniqueName = FBlueprintEditorUtils::FindUniqueKismetName(Blueprint, EventName);
+        
+        UK2Node_CustomEvent* CustomEventNode = FBlueprintEditorUtils::AddCustomEventToGraph(
+            EventGraph,
+            UniqueName,
+            nullptr
+        );
+
+        if (CustomEventNode)
+        {
+            FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+            UE_LOG(LogTemp, Log, TEXT("Added custom event '%s' to Blueprint"), *EventName);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// ============================================================================
+// MODIFYING PROPERTIES
+// ============================================================================
+
+UObject* UBlueprintEditorUtilities::GetBlueprintCDO(UBlueprint* Blueprint)
+{
+    if (!Blueprint || !Blueprint->GeneratedClass)
+    {
+        return nullptr;
+    }
+
+    return Blueprint->GeneratedClass->GetDefaultObject();
+}
+
+bool UBlueprintEditorUtilities::SetBlueprintDefaultFloatProperty(UBlueprint* Blueprint, const FString& PropertyName, float Value)
+{
+    UObject* CDO = GetBlueprintCDO(Blueprint);
+    if (!CDO)
+    {
+        return false;
+    }
+
+    FProperty* Property = CDO->GetClass()->FindPropertyByName(FName(*PropertyName));
+    if (!Property)
+    {
+        return false;
+    }
+
+    FFloatProperty* FloatProp = CastField<FFloatProperty>(Property);
+    if (!FloatProp)
+    {
+        return false;
+    }
+
+    FloatProp->SetPropertyValue_InContainer(CDO, Value);
+    FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
+    
+    return true;
+}
+
+bool UBlueprintEditorUtilities::SetBlueprintDefaultIntProperty(UBlueprint* Blueprint, const FString& PropertyName, int32 Value)
+{
+    UObject* CDO = GetBlueprintCDO(Blueprint);
+    if (!CDO)
+    {
+        return false;
+    }
+
+    FProperty* Property = CDO->GetClass()->FindPropertyByName(FName(*PropertyName));
+    if (!Property)
+    {
+        return false;
+    }
+
+    FIntProperty* IntProp = CastField<FIntProperty>(Property);
+    if (!IntProp)
+    {
+        return false;
+    }
+
+    IntProp->SetPropertyValue_InContainer(CDO, Value);
+    FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
+    
+    return true;
+}
+
+bool UBlueprintEditorUtilities::SetBlueprintDefaultBoolProperty(UBlueprint* Blueprint, const FString& PropertyName, bool Value)
+{
+    UObject* CDO = GetBlueprintCDO(Blueprint);
+    if (!CDO)
+    {
+        return false;
+    }
+
+    FProperty* Property = CDO->GetClass()->FindPropertyByName(FName(*PropertyName));
+    if (!Property)
+    {
+        return false;
+    }
+
+    FBoolProperty* BoolProp = CastField<FBoolProperty>(Property);
+    if (!BoolProp)
+    {
+        return false;
+    }
+
+    BoolProp->SetPropertyValue_InContainer(CDO, Value);
+    FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
+    
+    return true;
+}
+
+bool UBlueprintEditorUtilities::SetBlueprintDefaultStringProperty(UBlueprint* Blueprint, const FString& PropertyName, const FString& Value)
+{
+    UObject* CDO = GetBlueprintCDO(Blueprint);
+    if (!CDO)
+    {
+        return false;
+    }
+
+    FProperty* Property = CDO->GetClass()->FindPropertyByName(FName(*PropertyName));
+    if (!Property)
+    {
+        return false;
+    }
+
+    FStrProperty* StrProp = CastField<FStrProperty>(Property);
+    if (!StrProp)
+    {
+        return false;
+    }
+
+    StrProp->SetPropertyValue_InContainer(CDO, Value);
+    FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
+    
+    return true;
+}
+
+// ============================================================================
+// COMPILATION AND SAVING
+// ============================================================================
+
+bool UBlueprintEditorUtilities::CompileBlueprint(UBlueprint* Blueprint)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    FKismetEditorUtilities::CompileBlueprint(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Compiled Blueprint: %s"), *Blueprint->GetName());
+    return true;
+}
+
+bool UBlueprintEditorUtilities::SaveBlueprint(UBlueprint* Blueprint)
+{
+    if (!Blueprint)
+    {
+        return false;
+    }
+
+    UPackage* Package = Blueprint->GetOutermost();
+    if (!Package)
+    {
+        return false;
+    }
+
+    FString PackageFileName = FPackageName::LongPackageNameToFilename(Package->GetName(), FPackageName::GetAssetPackageExtension());
+    
+    FSavePackageArgs SaveArgs;
+    SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+    SaveArgs.SaveFlags = SAVE_NoError;
+    
+    bool bSaved = UPackage::SavePackage(Package, nullptr, *PackageFileName, SaveArgs);
+    
+    if (bSaved)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Saved Blueprint: %s"), *Blueprint->GetName());
+    }
+    
+    return bSaved;
+}
+
+void UBlueprintEditorUtilities::MarkBlueprintModified(UBlueprint* Blueprint)
+{
+    if (Blueprint)
+    {
+        FBlueprintEditorUtils::MarkBlueprintAsModified(Blueprint);
+    }
+}
+
+// ============================================================================
+// ASSET DISCOVERY
+// ============================================================================
+
+TArray<UBlueprint*> UBlueprintEditorUtilities::FindAllBlueprintsInPath(const FString& Path)
+{
+    TArray<UBlueprint*> Blueprints;
+    
+    FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+    
+    TArray<FAssetData> AssetList;
+    AssetRegistryModule.Get().GetAssetsByPath(FName(*Path), AssetList, true);
+    
+    for (const FAssetData& Asset : AssetList)
+    {
+        if (Asset.AssetClassPath.ToString() == TEXT("/Script/Engine.Blueprint"))
+        {
+            UBlueprint* Blueprint = Cast<UBlueprint>(Asset.GetAsset());
+            if (Blueprint)
+            {
+                Blueprints.Add(Blueprint);
+            }
+        }
+    }
+    
+    UE_LOG(LogTemp, Log, TEXT("Found %d Blueprint(s) in path: %s"), Blueprints.Num(), *Path);
+    return Blueprints;
+}
+
+TArray<UBlueprint*> UBlueprintEditorUtilities::FindBlueprintsByParentClass(UClass* ParentClass)
+{
+    TArray<UBlueprint*> Blueprints;
+    
+    if (!ParentClass)
+    {
+        return Blueprints;
+    }
+    
+    FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+    
+    TArray<FAssetData> AssetList;
+    AssetRegistryModule.Get().GetAssetsByClass(UBlueprint::StaticClass()->GetClassPathName(), AssetList, true);
+    
+    for (const FAssetData& Asset : AssetList)
+    {
+        UBlueprint* Blueprint = Cast<UBlueprint>(Asset.GetAsset());
+        if (Blueprint && Blueprint->ParentClass && Blueprint->ParentClass->IsChildOf(ParentClass))
+        {
+            Blueprints.Add(Blueprint);
+        }
+    }
+    
+    return Blueprints;
+}
+
+UBlueprint* UBlueprintEditorUtilities::LoadBlueprintAsset(const FString& AssetPath)
+{
+    return LoadObject<UBlueprint>(nullptr, *AssetPath);
+}
+
+// ============================================================================
+// BATCH OPERATIONS
+// ============================================================================
+
+int32 UBlueprintEditorUtilities::BatchAddVariableToBlueprints(const TArray<UBlueprint*>& Blueprints, 
+    const FString& VariableName, const FString& VariableType)
+{
+    int32 SuccessCount = 0;
+    
+    for (UBlueprint* Blueprint : Blueprints)
+    {
+        if (!Blueprint)
+        {
+            continue;
+        }
+        
+        bool bSuccess = false;
+        
+        if (VariableType == "Float")
+        {
+            bSuccess = AddFloatVariable(Blueprint, VariableName);
+        }
+        else if (VariableType == "Int")
+        {
+            bSuccess = AddIntVariable(Blueprint, VariableName);
+        }
+        else if (VariableType == "Bool")
+        {
+            bSuccess = AddBoolVariable(Blueprint, VariableName);
+        }
+        else if (VariableType == "String")
+        {
+            bSuccess = AddStringVariable(Blueprint, VariableName);
+        }
+        
+        if (bSuccess)
+        {
+            SuccessCount++;
+        }
+    }
+    
+    UE_LOG(LogTemp, Log, TEXT("Batch added variable '%s' to %d/%d Blueprint(s)"), 
+        *VariableName, SuccessCount, Blueprints.Num());
+    
+    return SuccessCount;
+}
+
+int32 UBlueprintEditorUtilities::BatchCompileBlueprints(const TArray<UBlueprint*>& Blueprints)
+{
+    int32 SuccessCount = 0;
+    
+    for (UBlueprint* Blueprint : Blueprints)
+    {
+        if (Blueprint)
+        {
+            FKismetEditorUtilities::CompileBlueprint(Blueprint);
+            SuccessCount++;
+        }
+    }
+    
+    UE_LOG(LogTemp, Log, TEXT("Batch compiled %d Blueprint(s)"), SuccessCount);
+    return SuccessCount;
+}
+
+bool UBlueprintEditorUtilities::ReparentBlueprint(UBlueprint* Blueprint, UClass* NewParentClass)
+{
+    if (!Blueprint || !NewParentClass)
+    {
+        return false;
+    }
+
+    Blueprint->ParentClass = NewParentClass;
+    FBlueprintEditorUtils::RefreshAllNodes(Blueprint);
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Reparented Blueprint to: %s"), *NewParentClass->GetName());
+    return true;
+}
+
+// ============================================================================
+// INTERFACES
+// ============================================================================
+
+bool UBlueprintEditorUtilities::AddInterfaceToBlueprint(UBlueprint* Blueprint, TSubclassOf<UInterface> Interface)
+{
+    if (!Blueprint || !Interface)
+    {
+        return false;
+    }
+
+    Blueprint->ImplementedInterfaces.AddUnique(FBPInterfaceDescription(Interface));
+    FBlueprintEditorUtils::RefreshAllNodes(Blueprint);
+    FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+    
+    UE_LOG(LogTemp, Log, TEXT("Added interface to Blueprint"));
+    return true;
+}
+
+bool UBlueprintEditorUtilities::RemoveInterfaceFromBlueprint(UBlueprint* Blueprint, TSubclassOf<UInterface> Interface)
+{
+    if (!Blueprint || !Interface)
+    {
+        return false;
+    }
+
+    for (int32 i = Blueprint->ImplementedInterfaces.Num() - 1; i >= 0; --i)
+    {
+        if (Blueprint->ImplementedInterfaces[i].Interface == Interface)
+        {
+            Blueprint->ImplementedInterfaces.RemoveAt(i);
+            FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+            
+            UE_LOG(LogTemp, Log, TEXT("Removed interface from Blueprint"));
+            return true;
+        }
+    }
+
+    return false;
+}
+
+#endif // WITH_EDITOR

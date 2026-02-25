@@ -1,0 +1,434 @@
+// ExampleUsageManager.cpp
+
+#include "ExampleUsageManager.h"
+#include "BlueprintRuntimeManager.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+
+#if WITH_EDITOR
+#include "BlueprintEditorUtilities.h"
+#endif
+
+AExampleUsageManager::AExampleUsageManager()
+{
+    PrimaryActorTick.bCanEverTick = false;
+}
+
+void AExampleUsageManager::BeginPlay()
+{
+    Super::BeginPlay();
+}
+
+// ============================================================================
+// EXAMPLE 1: Enemy Spawn System
+// ============================================================================
+
+AActor* AExampleUsageManager::SpawnEnemyWithDifficulty(FVector Location, int32 DifficultyLevel)
+{
+    if (!EnemyBlueprintClass)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("EnemyBlueprintClass not set!"));
+        return nullptr;
+    }
+
+    // Spawn the enemy Blueprint
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    
+    AActor* Enemy = GetWorld()->SpawnActor<AActor>(
+        EnemyBlueprintClass,
+        Location,
+        FRotator::ZeroRotator,
+        SpawnParams
+    );
+
+    if (!Enemy)
+    {
+        return nullptr;
+    }
+
+    // Use Case 2: Modify the enemy's properties based on difficulty
+    ABlueprintRuntimeManager* RuntimeManager = NewObject<ABlueprintRuntimeManager>();
+
+    // Scale health by difficulty
+    float BaseHealth = 100.f;
+    float ScaledHealth = BaseHealth * (1.0f + (DifficultyLevel * 0.5f));
+    RuntimeManager->SetBlueprintPropertyFloat(Enemy, "Health", ScaledHealth);
+
+    // Scale damage by difficulty
+    float BaseDamage = 10.f;
+    float ScaledDamage = BaseDamage * (1.0f + (DifficultyLevel * 0.3f));
+    RuntimeManager->SetBlueprintPropertyFloat(Enemy, "AttackDamage", ScaledDamage);
+
+    // Set difficulty level tag
+    Enemy->Tags.Add(FName(*FString::Printf(TEXT("Difficulty_%d"), DifficultyLevel)));
+
+    UE_LOG(LogTemp, Log, TEXT("Spawned enemy with difficulty %d: Health=%.1f, Damage=%.1f"), 
+        DifficultyLevel, ScaledHealth, ScaledDamage);
+
+    return Enemy;
+}
+
+void AExampleUsageManager::ScaleAllEnemiesByPlayerLevel(int32 PlayerLevel)
+{
+    if (!EnemyBlueprintClass)
+    {
+        return;
+    }
+
+    // Find all instances of the enemy Blueprint
+    TArray<AActor*> AllEnemies;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), EnemyBlueprintClass, AllEnemies);
+
+    ABlueprintRuntimeManager* RuntimeManager = NewObject<ABlueprintRuntimeManager>();
+
+    for (AActor* Enemy : AllEnemies)
+    {
+        if (!Enemy)
+        {
+            continue;
+        }
+
+        // Get current health
+        float CurrentHealth = 0.f;
+        if (RuntimeManager->GetBlueprintPropertyFloat(Enemy, "Health", CurrentHealth))
+        {
+            // Scale by player level
+            float ScaleFactor = 1.0f + (PlayerLevel * 0.1f);
+            float NewHealth = CurrentHealth * ScaleFactor;
+            
+            RuntimeManager->SetBlueprintPropertyFloat(Enemy, "Health", NewHealth);
+            
+            UE_LOG(LogTemp, Log, TEXT("Scaled enemy %s health: %.1f -> %.1f"), 
+                *Enemy->GetName(), CurrentHealth, NewHealth);
+        }
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Scaled %d enemies based on player level %d"), 
+        AllEnemies.Num(), PlayerLevel);
+}
+
+// ============================================================================
+// EXAMPLE 2: Loot System
+// ============================================================================
+
+AActor* AExampleUsageManager::SpawnRandomizedLootChest(FVector Location)
+{
+    if (LootBlueprintClasses.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("No loot Blueprint classes configured!"));
+        return nullptr;
+    }
+
+    // Pick a random loot chest Blueprint
+    int32 RandomIndex = FMath::RandRange(0, LootBlueprintClasses.Num() - 1);
+    TSubclassOf<AActor> ChosenClass = LootBlueprintClasses[RandomIndex];
+
+    // Spawn the chest
+    AActor* LootChest = GetWorld()->SpawnActor<AActor>(
+        ChosenClass,
+        Location,
+        FRotator::ZeroRotator
+    );
+
+    if (!LootChest)
+    {
+        return nullptr;
+    }
+
+    ABlueprintRuntimeManager* RuntimeManager = NewObject<ABlueprintRuntimeManager>();
+
+    // Randomize properties
+    int32 GoldAmount = FMath::RandRange(10, 100);
+    RuntimeManager->SetBlueprintPropertyInt(LootChest, "GoldAmount", GoldAmount);
+
+    bool bContainsRareItem = FMath::FRand() < 0.2f; // 20% chance
+    RuntimeManager->SetBlueprintPropertyBool(LootChest, "ContainsRareItem", bContainsRareItem);
+
+    FString ChestName = FString::Printf(TEXT("Chest_%d"), FMath::RandRange(1000, 9999));
+    RuntimeManager->SetBlueprintPropertyString(LootChest, "ChestID", ChestName);
+
+    UE_LOG(LogTemp, Log, TEXT("Spawned loot chest: Gold=%d, Rare=%s"), 
+        GoldAmount, bContainsRareItem ? TEXT("Yes") : TEXT("No"));
+
+    return LootChest;
+}
+
+// ============================================================================
+// EXAMPLE 3: Dynamic Quest System
+// ============================================================================
+
+AActor* AExampleUsageManager::CreateQuestNPC(const FString& NPCName, const FString& QuestText, int32 GoldReward)
+{
+    // This assumes you have a BP_QuestNPC Blueprint class
+    FString NPCBlueprintPath = TEXT("/Game/Blueprints/BP_QuestNPC.BP_QuestNPC_C");
+    
+    // Load the Blueprint class
+    UClass* NPCClass = StaticLoadClass(AActor::StaticClass(), nullptr, *NPCBlueprintPath);
+    
+    if (!NPCClass)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to load NPC Blueprint from path: %s"), *NPCBlueprintPath);
+        return nullptr;
+    }
+
+    // Spawn the NPC
+    FVector SpawnLocation = GetActorLocation() + FVector(200.f, 0.f, 0.f);
+    AActor* QuestNPC = GetWorld()->SpawnActor<AActor>(NPCClass, SpawnLocation, FRotator::ZeroRotator);
+
+    if (!QuestNPC)
+    {
+        return nullptr;
+    }
+
+    ABlueprintRuntimeManager* RuntimeManager = NewObject<ABlueprintRuntimeManager>();
+
+    // Configure the quest NPC
+    RuntimeManager->SetBlueprintPropertyString(QuestNPC, "NPCName", NPCName);
+    RuntimeManager->SetBlueprintPropertyString(QuestNPC, "QuestDialogue", QuestText);
+    RuntimeManager->SetBlueprintPropertyInt(QuestNPC, "QuestReward", GoldReward);
+    RuntimeManager->SetBlueprintPropertyBool(QuestNPC, "QuestActive", true);
+
+    // Optionally call a Blueprint function to initialize the quest
+    RuntimeManager->CallBlueprintFunction(QuestNPC, "InitializeQuest");
+
+    UE_LOG(LogTemp, Log, TEXT("Created quest NPC '%s' with reward %d gold"), *NPCName, GoldReward);
+
+    return QuestNPC;
+}
+
+// ============================================================================
+// EXAMPLE 4: Debugging
+// ============================================================================
+
+void AExampleUsageManager::DebugPrintActorProperties(AActor* TargetActor)
+{
+    if (!TargetActor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("TargetActor is null!"));
+        return;
+    }
+
+    UClass* ActorClass = TargetActor->GetClass();
+    
+    UE_LOG(LogTemp, Log, TEXT("=== Properties of %s ==="), *TargetActor->GetName());
+    UE_LOG(LogTemp, Log, TEXT("Class: %s"), *ActorClass->GetName());
+
+    // Iterate through all properties
+    for (TFieldIterator<FProperty> It(ActorClass); It; ++It)
+    {
+        FProperty* Property = *It;
+        FString PropertyName = Property->GetName();
+        FString PropertyType = Property->GetClass()->GetName();
+
+        // Try to get value as string (for simple types)
+        FString PropertyValue = TEXT("(complex type)");
+
+        if (FFloatProperty* FloatProp = CastField<FFloatProperty>(Property))
+        {
+            float Value = FloatProp->GetPropertyValue_InContainer(TargetActor);
+            PropertyValue = FString::SanitizeFloat(Value);
+        }
+        else if (FIntProperty* IntProp = CastField<FIntProperty>(Property))
+        {
+            int32 Value = IntProp->GetPropertyValue_InContainer(TargetActor);
+            PropertyValue = FString::FromInt(Value);
+        }
+        else if (FBoolProperty* BoolProp = CastField<FBoolProperty>(Property))
+        {
+            bool Value = BoolProp->GetPropertyValue_InContainer(TargetActor);
+            PropertyValue = Value ? TEXT("true") : TEXT("false");
+        }
+        else if (FStrProperty* StrProp = CastField<FStrProperty>(Property))
+        {
+            PropertyValue = StrProp->GetPropertyValue_InContainer(TargetActor);
+        }
+
+        UE_LOG(LogTemp, Log, TEXT("  %s (%s): %s"), 
+            *PropertyName, *PropertyType, *PropertyValue);
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("=== End Properties ==="));
+}
+
+void AExampleUsageManager::TestCallBlueprintFunction(AActor* TargetActor, FName FunctionName)
+{
+    if (!TargetActor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("TargetActor is null!"));
+        return;
+    }
+
+    UFunction* Function = TargetActor->FindFunction(FunctionName);
+    
+    if (!Function)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Function '%s' not found on actor '%s'"), 
+            *FunctionName.ToString(), *TargetActor->GetName());
+        return;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Calling function '%s' on actor '%s'..."), 
+        *FunctionName.ToString(), *TargetActor->GetName());
+
+    TargetActor->ProcessEvent(Function, nullptr);
+
+    UE_LOG(LogTemp, Log, TEXT("Function call completed."));
+}
+
+// ============================================================================
+// EDITOR UTILITIES (Use Case 3)
+// ============================================================================
+
+#if WITH_EDITOR
+
+void UExampleEditorUtility::BatchSetupCharacterBlueprints()
+{
+    UE_LOG(LogTemp, Log, TEXT("Starting batch character Blueprint setup..."));
+
+    // Find all Blueprints in the Characters folder
+    TArray<UBlueprint*> CharacterBPs = UBlueprintEditorUtilities::FindAllBlueprintsInPath(
+        TEXT("/Game/Blueprints/Characters/")
+    );
+
+    int32 ModifiedCount = 0;
+
+    for (UBlueprint* BP : CharacterBPs)
+    {
+        if (!BP)
+        {
+            continue;
+        }
+
+        UE_LOG(LogTemp, Log, TEXT("Processing Blueprint: %s"), *BP->GetName());
+
+        // Add standard variables
+        UBlueprintEditorUtilities::AddFloatVariable(BP, TEXT("MaxHealth"), 100.f);
+        UBlueprintEditorUtilities::AddFloatVariable(BP, TEXT("CurrentHealth"), 100.f);
+        UBlueprintEditorUtilities::AddFloatVariable(BP, TEXT("MovementSpeed"), 600.f);
+        UBlueprintEditorUtilities::AddIntVariable(BP, TEXT("Level"), 1);
+        UBlueprintEditorUtilities::AddBoolVariable(BP, TEXT("IsAlive"), true);
+
+        // Set variable metadata
+        UBlueprintEditorUtilities::SetVariableMetadata(BP, TEXT("MaxHealth"), true, false, TEXT("Stats"));
+        UBlueprintEditorUtilities::SetVariableMetadata(BP, TEXT("CurrentHealth"), false, true, TEXT("Stats"));
+        UBlueprintEditorUtilities::SetVariableMetadata(BP, TEXT("MovementSpeed"), true, false, TEXT("Movement"));
+
+        // Compile and save
+        UBlueprintEditorUtilities::CompileBlueprint(BP);
+        UBlueprintEditorUtilities::SaveBlueprint(BP);
+
+        ModifiedCount++;
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Batch setup complete! Modified %d Blueprint(s)."), ModifiedCount);
+}
+
+void UExampleEditorUtility::GenerateEnemyBlueprints()
+{
+    UE_LOG(LogTemp, Log, TEXT("Generating enemy Blueprints..."));
+
+    // Enemy types to create
+    TArray<FString> EnemyTypes = { TEXT("Goblin"), TEXT("Orc"), TEXT("Troll"), TEXT("Dragon") };
+    TArray<float> HealthValues = { 50.f, 100.f, 200.f, 500.f };
+    TArray<float> DamageValues = { 10.f, 20.f, 35.f, 75.f };
+
+    // Base class (assumes you have a C++ ABaseEnemy or similar)
+    UClass* BaseClass = AActor::StaticClass(); // Replace with your actual base class
+
+    for (int32 i = 0; i < EnemyTypes.Num(); i++)
+    {
+        FString EnemyName = EnemyTypes[i];
+        FString BPName = FString::Printf(TEXT("BP_Enemy_%s"), *EnemyName);
+
+        // Create new Blueprint
+        UBlueprint* NewBP = UBlueprintEditorUtilities::CreateNewBlueprint(
+            TEXT("/Game/Blueprints/Enemies/"),
+            BPName,
+            BaseClass
+        );
+
+        if (NewBP)
+        {
+            // Add enemy-specific variables
+            UBlueprintEditorUtilities::AddFloatVariable(NewBP, TEXT("Health"), HealthValues[i]);
+            UBlueprintEditorUtilities::AddFloatVariable(NewBP, TEXT("AttackDamage"), DamageValues[i]);
+            UBlueprintEditorUtilities::AddStringVariable(NewBP, TEXT("EnemyType"), EnemyName);
+
+            // Add a mesh component
+            UBlueprintEditorUtilities::AddComponentToBlueprint(
+                NewBP,
+                UStaticMeshComponent::StaticClass(),
+                TEXT("MeshComponent")
+            );
+
+            // Compile and save
+            UBlueprintEditorUtilities::CompileBlueprint(NewBP);
+            UBlueprintEditorUtilities::SaveBlueprint(NewBP);
+
+            UE_LOG(LogTemp, Log, TEXT("Created enemy Blueprint: %s"), *BPName);
+        }
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Enemy Blueprint generation complete!"));
+}
+
+void UExampleEditorUtility::ValidateAllCharacterBlueprints()
+{
+    UE_LOG(LogTemp, Log, TEXT("Validating character Blueprints..."));
+
+    TArray<UBlueprint*> CharacterBPs = UBlueprintEditorUtilities::FindAllBlueprintsInPath(
+        TEXT("/Game/Blueprints/Characters/")
+    );
+
+    TArray<FString> RequiredVariables = { TEXT("MaxHealth"), TEXT("CurrentHealth"), TEXT("MovementSpeed") };
+    int32 ValidCount = 0;
+    int32 InvalidCount = 0;
+
+    for (UBlueprint* BP : CharacterBPs)
+    {
+        if (!BP)
+        {
+            continue;
+        }
+
+        bool bIsValid = true;
+
+        // Check for required variables
+        for (const FString& VarName : RequiredVariables)
+        {
+            bool bFoundVar = false;
+
+            for (const FBPVariableDescription& Var : BP->NewVariables)
+            {
+                if (Var.VarName.ToString() == VarName)
+                {
+                    bFoundVar = true;
+                    break;
+                }
+            }
+
+            if (!bFoundVar)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Blueprint '%s' is missing variable: %s"), 
+                    *BP->GetName(), *VarName);
+                bIsValid = false;
+            }
+        }
+
+        if (bIsValid)
+        {
+            ValidCount++;
+            UE_LOG(LogTemp, Log, TEXT("✓ Blueprint '%s' is valid"), *BP->GetName());
+        }
+        else
+        {
+            InvalidCount++;
+            UE_LOG(LogTemp, Warning, TEXT("✗ Blueprint '%s' is invalid"), *BP->GetName());
+        }
+    }
+
+    UE_LOG(LogTemp, Log, TEXT("Validation complete: %d valid, %d invalid"), ValidCount, InvalidCount);
+}
+
+#endif
