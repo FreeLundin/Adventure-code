@@ -80,16 +80,16 @@ azd env set DEPLOYER_PRINCIPAL_ID <your-object-id>
 azd env set AZURE_ENV_NAME foundry
 azd provision --preview
 
-> **Quota warning:** if you see errors about SKU or VM quota (e.g. PremiumV3 or Basic VMs), you may need to choose a lower App Service plan SKU (the default has been set to `F1`) or request a quota increase on your subscription. You can open a support ticket via the portal or run:
+> **Quota warning:** if you see errors about SKU or VM quota (e.g. PremiumV3, Basic VMs, or Free VMs), you may need to request a quota increase on your subscription. We reverted to `B1` (basic tier) which corresponds to the **Basic vCPU** quota.  To open a ticket via CLI:
 >
 > ```powershell
 > az support ticket create --problem-classification "Quota" --severity "Moderate" \
->     --title "Increase App Service Basic vCPU quota" \
+>     --title "Increase Basic vCPU quota" \
 >     --description "Need at least 1 Basic vCPU in East US for MCP deployment" \
 >     --subscription $env:AZURE_SUBSCRIPTION_ID
 > ```
-> 
-> Quota requests typically complete in a few minutes, after which `azd up` should succeed.
+>
+> Alternately, use the Azure Portal → **Subscriptions** → **Usage + quotas** and request an increase for **Basic vCPUs** (or Free VMs if you choose `F1`).  Once approved, rerun `azd up`.
 
 azd up
 ```
