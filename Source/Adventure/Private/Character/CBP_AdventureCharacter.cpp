@@ -13,6 +13,19 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"
 
+// implementation of native event declared in header
+void ACBP_AdventureCharacter::OnCustomAction_Implementation()
+{
+    // default behaviour: no-op
+}
+#include "Components/CapsuleComponent.h" // needed for capsule access
+
+// implement custom action event
+void ACBP_AdventureCharacter::OnCustomAction_Implementation()
+{
+    // default behavior: nothing (can be overridden in Blueprint)
+}
+
 ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 {
 	AbilitySystemComponent = nullptr;

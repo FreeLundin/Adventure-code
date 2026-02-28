@@ -13,10 +13,8 @@ void FAdventureModule::StartupModule()
 
 void FAdventureModule::ShutdownModule()
 {
-    if (FToolRegistry* Registry = FToolRegistry::Get())
-    {
-        Registry->UnregisterTool(FBlueprintBindTool::GetName());
-    }
+    // no-op; registration is handled by the MCP plugin itself and the plugin
+    // is currently disabled to avoid build errors.
 }
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FAdventureModule, Adventure, "Adventure" );

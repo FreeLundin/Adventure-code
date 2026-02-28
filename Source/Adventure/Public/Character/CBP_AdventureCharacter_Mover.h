@@ -86,13 +86,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Traversal")
 	void RequestTraversalClimb();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Traversal")
+	// make these native so C++ can supply a default implementation
+	UFUNCTION(BlueprintNativeEvent, Category = "Traversal")
 	void OnTraversalRequestVault();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Traversal")
+	UFUNCTION(BlueprintNativeEvent, Category = "Traversal")
 	void OnTraversalRequestMantle();
 
-	UFUNCTION(BlueprintImplementableEvent, Category = "Traversal")
+	UFUNCTION(BlueprintNativeEvent, Category = "Traversal")
 	void OnTraversalRequestClimb();
 
 	// ===== ACCESSORS =====

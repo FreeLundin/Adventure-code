@@ -186,6 +186,39 @@ This guide can be copied to other projects or turned into a wiki.
 5. **Documentation prevents tribal knowledge** – having a written guide lets new contributors follow the patterns immediately.
 
 ---
+## 8. AI & Automation Governance
+
+The repository includes a simple rule set governing which external commands are
+allowed to run within automation scripts and bots.  The current pattern used in
+the Adventure project is:
+
+```json
+{
+  "mkdir": true,
+  "npm run build": true,
+  "bin/test.sh": true,
+  "/^git (status|show\\b.*)$/": true,
+  "/^Get-ChildItem\\b/i": true,
+  "/.*/": true,      // catch-all (use with care)
+  "rm": false        // destructive commands require explicit approval
+}
+```
+
+These express “allow-list” and “deny-list” rules that our CI bot evaluates when
+executing shell commands.  Any new automation should update this JSON and the
+corresponding evaluation logic in the bot, and the rules themselves should be
+checked into source control so they are auditable.  This acts as our AI
+governance layer: the permitted actions are explicit, and destructive or
+sensitive operations always trigger human review.
+
+Note the catch-all entry at the end – it makes every command permitted unless
+specifically blocked, so carefully consider its use in other projects.  You
+can adapt the pattern (e.g. default deny) to fit your organisation’s security
+policies.
+
+Make note of this section in any project that borrows the hybrid workflow so
+that everyone understands the governance expectations.
+
 ## 9. How to port to another project
 
 1. **Copy `AdventureMacros.h`** to your new module and rename macros (e.g. `MYGAME_PROP`).

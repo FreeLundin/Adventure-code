@@ -2,9 +2,11 @@
 // Adventure Project - Mover-based Character Variant
 
 #include "Character/CBP_AdventureCharacter_Mover.h"
+#include "Character/CBP_AdventureCharacter.h" // traversal structs
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/Actor.h"
 #include "Core/AdventurePlayerState.h"
 #include "DefaultMovementSet/CharacterMoverComponent.h"
 #include "EnhancedInputComponent.h"

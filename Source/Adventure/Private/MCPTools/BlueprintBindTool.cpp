@@ -1,13 +1,16 @@
 #include "MCPTools/BlueprintBindTool.h"
+#if WITH_EDITOR
 #include "K2Node_AddInputActionEvent.h"
 #include "K2Node_CallFunction.h"
 #include "K2EditorUtilities.h"
 #include "EdGraphSchema_K2.h"
 #include "Engine/Blueprint.h"
 #include "UObject/SoftObjectPath.h"
+#endif
 
 bool FBlueprintBindTool::Execute(TSharedPtr<FJsonObject> Params, TSharedPtr<FJsonObject>& OutResult)
 {
+#if WITH_EDITOR
     const FString InputActionPath = Params->GetStringField(TEXT("inputAction"));
     FString AbilityTag = Params->GetStringField(TEXT("abilityTag"));
 
@@ -67,12 +70,13 @@ bool FBlueprintBindTool::Execute(TSharedPtr<FJsonObject> Params, TSharedPtr<FJso
         BP->Modify();
         BP->MarkPackageDirty();
     }
-
-    return true;
+#endif
+    return false;
 }
 
 TSharedPtr<FJsonObject> FBlueprintBindTool::GetInputSchema()
 {
+#if WITH_EDITOR
     TSharedPtr<FJsonObject> Schema = MakeShared<FJsonObject>();
     // simple schema describing required fields
     Schema->SetStringField(TEXT("type"), TEXT("object"));
@@ -82,4 +86,7 @@ TSharedPtr<FJsonObject> FBlueprintBindTool::GetInputSchema()
     props->SetStringField(TEXT("abilityTag"), TEXT("string"));
     Schema->SetObjectField(TEXT("properties"), props);
     return Schema;
+#else
+    return MakeShared<FJsonObject>();
+#endif
 }
