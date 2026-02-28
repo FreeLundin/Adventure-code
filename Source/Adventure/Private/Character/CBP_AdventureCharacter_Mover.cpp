@@ -208,19 +208,10 @@ void ACBP_AdventureCharacter_Mover::RequestTraversalVault()
 
 void ACBP_AdventureCharacter_Mover::OnTraversalRequestVault_Implementation()
 {
-	// default native behaviour: forward to base character traversal query using forward direction
-	UE_LOG(LogTemp, Log, TEXT("[Traversal] Mover vault request"));
-	FVector Dir = GetActorForwardVector();
-	FS_TraversalCheckInputs Inputs = GetTraversalCheckInputs(Dir);
-	bool bTraversalCheckFailed = true;
-	bool bMontageSelectionFailed = true;
-	FS_TraversalCheckResult Result;
-	TryTraversalAction(Inputs, false, bTraversalCheckFailed, bMontageSelectionFailed, Result,
-		GetActorLocation(),
-		GetCapsuleComponent()->GetScaledCapsuleRadius(),
-		GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-		FVector::ZeroVector, FVector::ZeroVector,
-		FHitResult(), 0, 0.0, TArray<UAnimMontage*>());
+    // default native behaviour for the Mover variant: delegate traversal to the owning character
+    UE_LOG(LogTemp, Log, TEXT("[Traversal] Mover vault request (stub)"));
+    // The Mover implementation does not implement character traversal checks here.
+    // If you need traversal for Mover, implement logic in Blueprint or in a game-specific subclass.
 }
 
 void ACBP_AdventureCharacter_Mover::OnTraversalRequestMantle_Implementation()
