@@ -3,9 +3,7 @@
 
 // include our new tool and registry
 #include "MCPTools/BlueprintBindTool.h"
-#if WITH_EDITOR
-#include "UE_MCP_Plugin/Public/ToolRegistry.h"
-#endif
+// The MCP plugin has been removed/disabled for this workspace. Do not include its headers here.
 
 void FAdventureModule::StartupModule()
 {

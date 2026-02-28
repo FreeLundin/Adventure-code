@@ -171,10 +171,9 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	//	InputDirection.X, InputDirection.Y, CharMC->Velocity.X, CharMC->Velocity.Y);
 }
 
-void ACBP_AdventureCharacter::OnCustomAction_Implementation()
-{
-	// default stub; blueprint can override for custom behavior
-}
+// OnCustomAction_Implementation is provided by the UFUNCTION macro via GENERATED_BODY()
+// and should be implemented only once in this cpp file if needed. Keep this file
+// with no duplicate definitions to avoid linkage issues.
 
 void ACBP_AdventureCharacter::UpdateRotation_PreCMC()
 {
