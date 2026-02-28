@@ -1,19 +1,19 @@
 /.azure
 /.git
 /.github
+/.vs
 /.vscode
 /AI
 /Azure_UE_MCP_AGENT
-/Backups
 /Content
 /DerivedDataCache
 /Design Document
 /Documentation
 /infra
 /Intermediate
-/patches
 /Saved
 /scripts
 /Tools
 /Update_GASP
+/Plugins/AdventureUHT/Intermediate
 /Plugins/UE_PAIRED_PROGRAMMER_PLUGIN/Intermediate
