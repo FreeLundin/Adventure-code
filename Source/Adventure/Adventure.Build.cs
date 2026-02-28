@@ -22,12 +22,23 @@ public class Adventure : ModuleRules
 			"Mover",
 			"MotionWarping",
 			"UMG",
-            "UE_MCP_Plugin"
+
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { 
 			"ControlRig"
 		});
+
+		// Editor-only dependencies required for tools that manipulate blueprints
+		if (Target.bBuildEditor == true)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[] {
+				"UnrealEd",
+				"Kismet",
+				"BlueprintGraph",
+				"KismetCompiler"
+			});
+		}
 
 		// Public include paths for Live Coding recompilation
 		PublicIncludePaths.AddRange(new string[] {
