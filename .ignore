@@ -1,12 +1,15 @@
+/.azure
 /.git
 /.github
 /.vscode
 /AI
+/Azure_UE_MCP_AGENT
 /Backups
 /Content
 /DerivedDataCache
 /Design Document
 /Documentation
+/infra
 /Intermediate
 /patches
 /Saved

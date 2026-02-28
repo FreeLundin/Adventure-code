@@ -14,6 +14,7 @@
 #include "AbilitySystemInterface.h"
 #include "GAS/AdventureGASInterface.h"
 #include "Core/AdventureTypes.h"
+#include "Core/AdventureMacros.h" // project-wide reflection helpers
 #include "CBP_AdventureCharacter.generated.h"
 
 class APlayerController;
@@ -68,6 +69,11 @@ public:
 
 	/** Constructor */
 	ACBP_AdventureCharacter();
+
+    // BlueprintNativeEvent that can be overridden in either C++ or BP
+    ADV_NATIVE_EVENT()
+    void OnCustomAction();
+
 
 	// ===== GAS INITIALIZATION =====
 
@@ -165,15 +171,16 @@ public:
 	// ===== GAS CONFIGURATION =====
 
 	/** Gameplay Ability System component (owned by PlayerState) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
+	// ASC component is owned by playerstate; exposed read-only for convenience
+	ADV_PROP_RO()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
 	/** Default abilities granted to this character */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	ADV_PROP_RO(EditDefaultsOnly)
 	TArray<TSubclassOf<UGameplayAbility>> DefaultAbilities;
 
 	/** Optional default attribute effect applied on spawn */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	ADV_PROP_RO(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> DefaultAttributesEffect;
 
 	// ===== MOVEMENT PARAMETER CALCULATION =====
@@ -412,85 +419,85 @@ public:
 	// ===== ADVANCED LOCOMOTION COMPONENTS =====
 
 	/** Grapple hook and gun component for hook-swing traversal mechanics */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> GrappleHook_Gun_Component;
 
 	/** Interaction component for picking up items, activating switches, etc. */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Interaction")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> Interaction_Component;
 
 	/** Pole climbing component for sliding and climbing vertical poles */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> PoleClimbing_Component;
 
 	/** Push/pull component for moving physics objects and environmental mechanics */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> PushPullComponent;
 
 	/** Narrow path (edge walk) component for balancing on thin surfaces */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> NarrowPathComponent;
 
 	/** Sliding system component for controlled slide movements down slopes */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> SlidingComponent;
 
 	/** Beam walk component for traversing narrow beams or rails */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> BeamWalk_Component;
 
 	/** Zipline ascender component for climbing ziplines upward */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> ZiplineAscenderComponent;
 
 	/** Zipline component for traversing ziplines horizontally or downward */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> ZiplineComponent;
 
 	/** Wall running component for running along vertical surfaces */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> WallRunning_Component;
 
 	/** Wall climbing component for scaling vertical walls hand-over-hand */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> WallClimbing_Component;
 
 	/** Rope climbing system for swinging and climbing ropes */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> RopeClimbing_System;
 
 	/** Swimming component for water-based locomotion */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> Swimming;
 
 	/** Ladder system component for climbing ladders */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> Ladder_System;
 
 	/** Physical animation component for ragdoll and dynamic animation blending */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Animation")
+	ADV_PROP_RO()
 	TObjectPtr<UPhysicalAnimationComponent> PhysicalAnimation;
 
 	/** General climbing component (guards, ledges, etc.) */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Traversal")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> Climbing_Component;
 
 	// ===== CORE ANIMATION & CAMERA COMPONENTS =====
 
 	/** Gameplay camera component providing camera behavior (distance, offset, FOV smoothing) */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Camera")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> GameplayCamera;
 
 	/** Pre-CMC tick component for pre-movement-component gameplay logic */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Core")
+	ADV_PROP_RO()
 	TObjectPtr<UActorComponent> PreCMCTick;
 
 	/** Spring arm component providing camera distance and collision avoidance */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Camera")
+	ADV_PROP_RO()
 	TObjectPtr<USpringArmComponent> SpringArm;
 
 	/** Motion warping component for sync animation root motion with world positions */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Animation")
+	ADV_PROP_RO()
 	TObjectPtr<UMotionWarpingComponent> MotionWarping;
 
 	// ===== INPUT CONFIGURATION =====
@@ -584,8 +591,12 @@ public:
 	// ===== ADVANCED ANIMATION OPTIONS =====
 
 	/** When true, character root motion is driven by GAS ability attributes (damage knockback, knockdown, etc.) */
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Movement")
+	ADV_PROP(EditDefaultsOnly, Category = "Movement")
 	bool bUsingAttributeBasedRootMotion;
+
+	/** Example of metadata usage; clamped above zero and exposed on spawn. */
+	ADV_PROP(ADV_EXPOSE_ON_SPAWN(), ADV_CLAMP_MIN("0"))
+	float ExampleDebugFloat;
 
 	/** Time remaining before motion corrections are re-enabled after traversal; prevents jitter during montages */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Traversal")
@@ -594,6 +605,6 @@ public:
 	// ===== ADVANCED TRAVERSAL SYSTEM =====
 
 	/** Master toggle to activate/deactivate all Advanced Traversal System mechanics */
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Traversal | ATS")
+	ADV_PROP(EditDefaultsOnly, Category = "Traversal | ATS")
 	bool bATSActivate;
 };

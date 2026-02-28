@@ -22,6 +22,9 @@ ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
+	// initialize example variable
+	ExampleDebugFloat = 0.0f;
+
 	// Configure character movement
 	if (UCharacterMovementComponent* CharMovement = GetCharacterMovement())
 	{
@@ -164,6 +167,11 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	// Log movement for debugging
 	//UE_LOG(LogTemp, Warning, TEXT("UpdateMovement_PreCMC: Input=%.2f,%.2f Velocity=%.1f,%.1f"), 
 	//	InputDirection.X, InputDirection.Y, CharMC->Velocity.X, CharMC->Velocity.Y);
+}
+
+void ACBP_AdventureCharacter::OnCustomAction_Implementation()
+{
+	// default stub; blueprint can override for custom behavior
 }
 
 void ACBP_AdventureCharacter::UpdateRotation_PreCMC()

@@ -1,0 +1,27 @@
+name: "Blueprint Exposure Check"
+
+on:
+  push:
+    paths:
+      - 'Source/Adventure/**'
+      - 'scripts/check_blueprint_exposure.py'
+  pull_request:
+    paths:
+      - 'Source/Adventure/**'
+      - 'scripts/check_blueprint_exposure.py'
+
+jobs:
+  check-exposure:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+      - name: Run blueprint exposure script
+        run: |
+          python scripts/check_blueprint_exposure.py

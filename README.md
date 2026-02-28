@@ -1,5 +1,9 @@
 # Adventure
 
+For information on the C++/Blueprint hybrid workflow, macros, tooling and
+project conventions, see [Documentation/HybridWorkflow.md](Documentation/HybridWorkflow.md).
+
+
 This repository contains the Adventure prototype built on Unreal Engine 5.7.
 The game is an experimental sample demonstrating:
 
