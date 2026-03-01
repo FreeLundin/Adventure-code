@@ -9,8 +9,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
-// forward declaration to avoid include
-class ULocalPlayer;
+#include "Engine/LocalPlayer.h" // need full definition for GetSubsystem
 #include "GAS/AdventureGameplayTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputActionValue.h"
@@ -37,7 +36,7 @@ void APC_AdventureController::BeginPlay()
 	// HUD disabled in rollback baseline
 }
 
-void APC_AdventureController::OnPossess(APawn* InPawn)
+void APC_AdventureController::OnPossess(APawn *InPawn)
 {
 	Super::OnPossess(InPawn);
 
@@ -46,7 +45,7 @@ void APC_AdventureController::OnPossess(APawn* InPawn)
 	CachedAdventureMover = Cast<ACBP_AdventureCharacter_Mover>(InPawn);
 	if (CachedAdventureCharacter)
 	{
-		if (IAbilitySystemInterface* AbilityInterface = Cast<IAbilitySystemInterface>(InPawn))
+		if (IAbilitySystemInterface *AbilityInterface = Cast<IAbilitySystemInterface>(InPawn))
 		{
 			CachedAbilitySystemComponent = AbilityInterface->GetAbilitySystemComponent();
 		}
@@ -63,7 +62,7 @@ void APC_AdventureController::OnPossess(APawn* InPawn)
 	}
 	else if (CachedAdventureMover)
 	{
-		if (IAbilitySystemInterface* AbilityInterface = Cast<IAbilitySystemInterface>(InPawn))
+		if (IAbilitySystemInterface *AbilityInterface = Cast<IAbilitySystemInterface>(InPawn))
 		{
 			CachedAbilitySystemComponent = AbilityInterface->GetAbilitySystemComponent();
 		}
@@ -89,13 +88,31 @@ void APC_AdventureController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	// TODO: Bind Enhanced Input actions in derived Blueprint class
-	// This is handled in SetupEnhancedInput for EIS integration
+	// Basic non-enhanced bindings as fallback
+	if (UInputComponent *IC = InputComponent)
+	{
+		IC->BindAxis(TEXT("MoveForward"), this, &APC_AdventureController::OnMoveAxis);
+		IC->BindAxis(TEXT("MoveRight"), this, &APC_AdventureController::OnMoveAxis);
+		IC->BindAxis(TEXT("LookUp"), this, &APC_AdventureController::OnLookAxis);
+		IC->BindAxis(TEXT("Turn"), this, &APC_AdventureController::OnLookAxis);
+	}
+
+	// Enhanced Input bindings are handled in SetupEnhancedInput; leave blueprint override opportunity
 }
 
 void APC_AdventureController::SetupEnhancedInput()
 {
-	// Enhanced Input disabled in rollback baseline; nothing to do
+	if (ULocalPlayer *LP = Cast<ULocalPlayer>(Player))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem *Subsys = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			// load mapping context asset (should be set in blueprint or via config)
+			if (InputMappingContext)
+			{
+				Subsys->AddMappingContext(InputMappingContext, 0);
+			}
+		}
+	}
 }
 
 void APC_AdventureController::TeardownEnhancedInput()
@@ -103,26 +120,24 @@ void APC_AdventureController::TeardownEnhancedInput()
 	// No-op for baseline
 }
 
-void APC_AdventureController::OnMoveInput(const FInputActionValue& Value)
+void APC_AdventureController::OnMoveInput(const FInputActionValue &Value)
 {
-	// TODO: Pass movement input to possessed character
+	const FVector2D MovementVector = Value.Get<FVector2D>();
 	if (CachedAdventureCharacter)
 	{
-		const FVector2D MovementVector = Value.Get<FVector2D>();
-		// TODO: Call character movement update
+		CachedAdventureCharacter->AddMovementInput(FVector(MovementVector.X, MovementVector.Y, 0.0f));
 	}
 	else if (CachedAdventureMover)
 	{
-		const FVector2D MovementVector = Value.Get<FVector2D>();
 		CachedAdventureMover->SetMoveInputVector(MovementVector);
 	}
 }
 
-void APC_AdventureController::OnLookInput(const FInputActionValue& Value)
+void APC_AdventureController::OnLookInput(const FInputActionValue &Value)
 {
-	// TODO: Update camera rotation based on look input
+	// TODO (TODO-CAMERA-SMOOTH): Update camera rotation based on look input
 	const FVector2D LookVector = Value.Get<FVector2D>();
-	// TODO: Apply sensitivity and inversion settings
+	// TODO (TODO-CAMERA-SMOOTH): Apply sensitivity and inversion settings
 
 	if (CachedAdventureMover)
 	{
@@ -130,31 +145,31 @@ void APC_AdventureController::OnLookInput(const FInputActionValue& Value)
 	}
 }
 
-void APC_AdventureController::OnSprintInput(const FInputActionValue& Value)
+void APC_AdventureController::OnSprintInput(const FInputActionValue &Value)
 {
 	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Sprint);
 }
 
-void APC_AdventureController::OnDodgeInput(const FInputActionValue& Value)
+void APC_AdventureController::OnDodgeInput(const FInputActionValue &Value)
 {
 	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Dodge);
 }
 
-void APC_AdventureController::OnAbilityInput_Light(const FInputActionValue& Value)
+void APC_AdventureController::OnAbilityInput_Light(const FInputActionValue &Value)
 {
-	// TODO: Activate light attack ability (GA_LightAttack)
+	// TODO (GAS-001): Activate light attack ability (GA_LightAttack)
 	if (CachedAbilitySystemComponent)
 	{
-		// TODO: Activate ability by tag
+		// TODO (GAS-001): Activate ability by tag
 	}
 }
 
-void APC_AdventureController::OnAbilityInput_Heavy(const FInputActionValue& Value)
+void APC_AdventureController::OnAbilityInput_Heavy(const FInputActionValue &Value)
 {
 	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Traversal);
 }
 
-void APC_AdventureController::OnInteractInput(const FInputActionValue& Value)
+void APC_AdventureController::OnInteractInput(const FInputActionValue &Value)
 {
 	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Interact);
 }
@@ -169,24 +184,36 @@ void APC_AdventureController::TryActivateAbilityByTag(FGameplayTag AbilityTag)
 	}
 }
 
-void APC_AdventureController::OnCameraToggleInput(const FInputActionValue& Value)
+void APC_AdventureController::OnCameraToggleInput(const FInputActionValue &Value)
 {
 	CycleCamera();
 }
 
-void APC_AdventureController::OnPauseInput(const FInputActionValue& Value)
+void APC_AdventureController::OnPauseInput(const FInputActionValue &Value)
 {
 	SetGamePaused(!bGamePaused);
 }
 
+// fallback handlers for legacy axis bindings
+void APC_AdventureController::OnMoveAxis(float Value)
+{
+	if (CachedAdventureCharacter)
+	{
+		CachedAdventureCharacter->AddMovementInput(GetControlRotation().RotateVector(FVector(Value, 0, 0)), 1.0f);
+	}
+}
 
+void APC_AdventureController::OnLookAxis(float Value)
+{
+	AddYawInput(Value * LookSensitivity);
+}
 
-ACBP_AdventureCharacter* APC_AdventureController::GetAdventureCharacter() const
+ACBP_AdventureCharacter *APC_AdventureController::GetAdventureCharacter() const
 {
 	return CachedAdventureCharacter;
 }
 
-UAbilitySystemComponent* APC_AdventureController::GetAdventureCharacterAbilitySystem() const
+UAbilitySystemComponent *APC_AdventureController::GetAdventureCharacterAbilitySystem() const
 {
 	return CachedAbilitySystemComponent;
 }
@@ -221,10 +248,9 @@ void APC_AdventureController::CycleCamera()
 	CachedAdventureCharacter->CameraStyle = NewCameraStyle;
 
 	// Log the camera change
-	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") :
-		(NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person") :
-		TEXT("First-Person");
-	
+	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") : (NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person")
+																																				  : TEXT("First-Person");
+
 	UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::CycleCamera - Switched to %s camera"), *CameraModeName);
 
 	// TODO: Add smooth camera transition animation

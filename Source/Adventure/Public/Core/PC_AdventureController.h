@@ -225,6 +225,10 @@ public:
 	UFUNCTION()
 	void OnPauseInput(const FInputActionValue& Value);
 
+	// legacy axis callbacks (non-Enhanced Input)
+	void OnMoveAxis(float Value);
+	void OnLookAxis(float Value);
+
 	// ===== HUD & UI MANAGEMENT =====
 	// (removed for baseline rollback)
 

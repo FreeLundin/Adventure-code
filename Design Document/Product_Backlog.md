@@ -40,6 +40,12 @@ Epic: Core Foundations
   - Description: Add Mover2 pawn, PlayerState-owned ASC, AdventureAttributeSet, gameplay tags, and default attributes GE.
   - Acceptance: Mover2 variant spawns, GAS initializes, attributes replicate.
   - Status: DONE
+  
+  - PF-006: C++ character base and blueprint wrapper
+    - Priority: High
+    - Description: Implement `AAdventureCharacterBase` deriving from `AdventureMoverPawnBase` with GAS-StateTree bridge; create `CBP_AdventureCharacter` blueprint subclass and corresponding StateTree asset.
+    - Acceptance: Character base compiles, default pawn set; blueprint exists and can be spawned; StateTree component references valid asset.
+    - Status: IN PROGRESS
 
 Epic: GAS & Combat
 - GC-001: `AS_RitualEnergy` AttributeSet

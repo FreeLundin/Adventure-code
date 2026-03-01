@@ -556,7 +556,7 @@ public:
 	 * Result of most recent traversal check; replicated to clients using OnRep_TraversalResult.
 	 * Contains montage selection, motion warp targets, and traversal metadata.
 	 * 
-	 * TODO: Add to GetLifetimeReplicatedProps:
+* TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
 	 *   DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, TraversalResult, COND_SimulatedOnly);
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Traversal", ReplicatedUsing = "OnRep_TraversalResult")
@@ -572,7 +572,7 @@ public:
 	 * Replicated input state containing movement, look, and ability activation flags.
 	 * Synchronized across network to enable server-side input validation.
 	 * 
-	 * TODO: Add to GetLifetimeReplicatedProps:
+* TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
 	 *   DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, CharacterInputState, COND_SkipOwner);
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Input", Replicated)

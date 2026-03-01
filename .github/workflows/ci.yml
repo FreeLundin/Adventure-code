@@ -1,0 +1,33 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-lint:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Unreal Engine Environment
+        run: |
+          echo "Assuming UE is installed at C:\\Program Files\\Epic Games\\UE_5.7"
+      - name: Compile Editor Target
+        shell: pwsh
+        run: |
+          & "C:\Program Files\Epic Games\UE_5.7\Engine\Build\BatchFiles\Build.bat" Development Win64 -Project="$PWD\Adventure.uproject" -TargetType=Editor -Progress -NoEngineChanges -NoHotReloadFromIDE
+      - name: Scan for TODO/FIXME and generated headers
+        shell: pwsh
+        run: |
+          $errors = $false
+          Write-Host "Searching for TODO/FIXME comments..."
+          $todos = git grep -n "TODO\|FIXME" || $null
+          if ($todos) { Write-Host "Found TODO/FIXME:\n$todos"; $errors = $true }
+          Write-Host "Searching for committed *.generated.h files..."
+          $gen = git ls-files "*.generated.h" || $null
+          if ($gen) { Write-Host "Committed generated headers:\n$gen"; $errors = $true }
+          if ($errors) { Write-Error "Lint failures detected" }

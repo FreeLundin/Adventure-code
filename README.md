@@ -1,5 +1,15 @@
 # Adventure
 
+This repository contains several planning and governance documents to help with development.  Key files include:
+
+- `ISSUES.md` – actionable issue list derived from the implementation roadmap.
+- `TECH_DEBT.md` – current technical debt register.
+- `LESSONS_LEARNED.md` – post-mortem notes.
+- `runbooks/CULTURAL_REVIEW_CHECKLIST.md` – guidelines for Orisha-based content.
+
+See the `Design Document/Implementation` folder for the full original plan.
+
+
 For information on the C++/Blueprint hybrid workflow, macros, tooling and
 project conventions, see [Documentation/HybridWorkflow.md](Documentation/HybridWorkflow.md).
 

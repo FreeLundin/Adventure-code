@@ -9,11 +9,11 @@ public class Adventure : ModuleRules
 		// Optimized for Live Coding: Use explicit PCHs
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		CppStandard = CppStandardVersion.Latest;
-		
-		PublicDependencyModuleNames.AddRange(new string[] { 
-			"Core", 
-			"CoreUObject", 
-			"Engine", 
+
+		PublicDependencyModuleNames.AddRange(new string[] {
+			"Core",
+			"CoreUObject",
+			"Engine",
 			"InputCore",
 			"GameplayAbilities",
 			"GameplayTags",
@@ -22,10 +22,10 @@ public class Adventure : ModuleRules
 			"Mover",
 			"MotionWarping",
 			"UMG",
-
+			// "StateTree" removed because the module/plugin isn't enabled in the project.
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { 
+		PrivateDependencyModuleNames.AddRange(new string[] {
 			"ControlRig"
 		});
 
@@ -46,7 +46,8 @@ public class Adventure : ModuleRules
 			"Adventure/Public/Core",
 			"Adventure/Public/Character",
 			"Adventure/Public/GAS",
-			"Adventure/Public/UI"
+			// UI folder removed; it doesn't exist in the repository.
+			"Adventure/Public/Components"   // headers like AdventureGASStateTreeBridgeComponent
 		});
 
 		// Private include paths for internal compilation
@@ -59,7 +60,7 @@ public class Adventure : ModuleRules
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
+
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

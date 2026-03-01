@@ -12,6 +12,7 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameplayTagsManager.h"
+#include "Net/UnrealNetwork.h" // for replication macros
 
 #include "Components/CapsuleComponent.h" // needed for capsule access
 
@@ -28,7 +29,7 @@ ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 	ExampleDebugFloat = 0.0f;
 
 	// Configure character movement
-	if (UCharacterMovementComponent* CharMovement = GetCharacterMovement())
+	if (UCharacterMovementComponent *CharMovement = GetCharacterMovement())
 	{
 		CharMovement->bOrientRotationToMovement = true;
 		CharMovement->MaxWalkSpeed = 600.0f;
@@ -42,13 +43,12 @@ ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 		UGA_AdventureSprint::StaticClass(),
 		UGA_AdventureDodge::StaticClass(),
 		UGA_AdventureTraversal::StaticClass(),
-		UGA_AdventureInteract::StaticClass()
-	};
+		UGA_AdventureInteract::StaticClass()};
 
 	DefaultAttributesEffect = UGE_AdventureDefaultAttributes::StaticClass();
 }
 
-void ACBP_AdventureCharacter::PossessedBy(AController* NewController)
+void ACBP_AdventureCharacter::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
 	InitializeAbilitySystem();
@@ -60,14 +60,14 @@ void ACBP_AdventureCharacter::OnRep_PlayerState()
 	InitializeAbilitySystem();
 }
 
-UAbilitySystemComponent* ACBP_AdventureCharacter::GetAbilitySystemComponent() const
+UAbilitySystemComponent *ACBP_AdventureCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
 void ACBP_AdventureCharacter::InitializeAbilitySystem()
 {
-	AAdventurePlayerState* AdventurePS = GetPlayerState<AAdventurePlayerState>();
+	AAdventurePlayerState *AdventurePS = GetPlayerState<AAdventurePlayerState>();
 	if (!AdventurePS)
 	{
 		return;
@@ -94,6 +94,14 @@ void ACBP_AdventureCharacter::SetupInput()
 	// Called by PlayerController to set up input mappings
 }
 
+void ACBP_AdventureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, TraversalResult, COND_SimulatedOnly);
+	DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, CharacterInputState, COND_SkipOwner);
+}
+
 bool ACBP_AdventureCharacter::HasMovementInputVector()
 {
 	// TODO: Query current movement input state
@@ -115,7 +123,7 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	}
 
 	// Get character movement component
-	UCharacterMovementComponent* CharMC = GetCharacterMovement();
+	UCharacterMovementComponent *CharMC = GetCharacterMovement();
 	if (!CharMC)
 	{
 		return;
@@ -124,7 +132,7 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	// Get current movement input vector (WASD or analog stick)
 	// This is consumed from the input buffer by the character movement system
 	FVector InputDirection = GetLastMovementInputVector();
-	
+
 	// Guard: No input
 	if (InputDirection.IsZero())
 	{
@@ -137,9 +145,9 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	//   - Walk: Normal speed (from WalkSpeeds)
 	//   - Run: Increased speed (from RunSpeeds)
 	//   - Sprint: Maximum speed (from SprintSpeeds) if stamina available
-	
+
 	FVector MaxSpeed = WalkSpeeds; // Default to walk speeds
-	
+
 	// TODO: Check if sprinting (check GAS ability state or sprint input)
 	// For now, if moving, use run speeds
 	if (HasMovementInputVector())
@@ -150,7 +158,7 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	// Apply movement to character movement component
 	// Convert input direction to world space if needed
 	FVector WorldDirection = InputDirection;
-	
+
 	// Clamp magnitude to 1.0 (input normalization)
 	WorldDirection = WorldDirection.GetClampedToMaxSize(1.0f);
 
@@ -160,14 +168,14 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	float StrafeSpeed = FVector::DotProduct(WorldDirection, GetActorRightVector()) * MaxSpeed.Y;
 
 	FVector DesiredVelocity = (GetActorForwardVector() * ForwardSpeed) + (GetActorRightVector() * StrafeSpeed);
-	
+
 	// Apply to character movement velocity
 	CharMC->Velocity.X = DesiredVelocity.X;
 	CharMC->Velocity.Y = DesiredVelocity.Y;
 	// Preserve Z velocity (gravity/jump)
 
 	// Log movement for debugging
-	//UE_LOG(LogTemp, Warning, TEXT("UpdateMovement_PreCMC: Input=%.2f,%.2f Velocity=%.1f,%.1f"), 
+	// UE_LOG(LogTemp, Warning, TEXT("UpdateMovement_PreCMC: Input=%.2f,%.2f Velocity=%.1f,%.1f"),
 	//	InputDirection.X, InputDirection.Y, CharMC->Velocity.X, CharMC->Velocity.Y);
 }
 
@@ -185,9 +193,9 @@ void ACBP_AdventureCharacter::UpdateRotation_PreCMC()
 
 	// TODO: Get look input (mouse/analog stick) from PlayerController camera
 	// For now, rotate character to face movement direction
-	
+
 	FVector InputDirection = GetLastMovementInputVector();
-	
+
 	// If no input, face current direction (no rotation update needed)
 	if (InputDirection.IsZero())
 	{
@@ -204,7 +212,7 @@ void ACBP_AdventureCharacter::UpdateRotation_PreCMC()
 	// Apply rotation with smooth interpolation
 	FRotator CurrentRotation = GetActorRotation();
 	const float RotationSpeed = 10.0f; // Degrees per...tick? (will need tuning)
-	
+
 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, DesiredRotation, GetWorld()->DeltaTimeSeconds, RotationSpeed);
 	SetActorRotation(NewRotation);
 
@@ -219,7 +227,7 @@ TEnumAsByte<E_Gait> ACBP_AdventureCharacter::GetDesiredGait(bool FullMovementInp
 	// Determine gait based on movement input and character state
 	// TODO: Check sprint ability active status from GAS
 	// For now: Walk if no input, Run if input present
-	
+
 	if (!FullMovementInput)
 	{
 		return E_Gait::Walk; // Default walk
@@ -235,9 +243,9 @@ double ACBP_AdventureCharacter::CalculateMaxSpeed(float StrafeSpeedMap)
 	// Calculate max speed based on current gait and strafe angle
 	// StrafeSpeedMap comes from animating the character's strafe angle (0-1 curve)
 	// This determines speed reduction when moving sideways or backward
-	
+
 	FVector MaxSpeeds = WalkSpeeds; // Default
-	
+
 	switch (Gait)
 	{
 	case E_Gait::Walk:
@@ -252,12 +260,12 @@ double ACBP_AdventureCharacter::CalculateMaxSpeed(float StrafeSpeedMap)
 	default:
 		MaxSpeeds = WalkSpeeds;
 	}
-	
+
 	// Forward movement (strafe map = 0) uses X
 	// Strafe movement (strafe map = 0.5) uses Y
 	// Backward (strafe map = 1.0) uses Z
 	float FinalMaxSpeed = FMath::Lerp(MaxSpeeds.X, MaxSpeeds.Z, StrafeSpeedMap);
-	
+
 	return FinalMaxSpeed;
 }
 
@@ -313,7 +321,7 @@ double ACBP_AdventureCharacter::CalculateMaxCrouchSpeed(float StrafeSpeedMap)
 	return CrouchSpeeds.X;
 }
 
-void ACBP_AdventureCharacter::SetupCamera(APlayerController* PlayerController)
+void ACBP_AdventureCharacter::SetupCamera(APlayerController *PlayerController)
 {
 	// TODO: Initialize camera components and attach to character
 	// Set initial camera mode based on CameraStyle
@@ -327,7 +335,7 @@ FS_TraversalCheckInputs ACBP_AdventureCharacter::GetTraversalCheckInputs(FVector
 	Inputs.CharacterRight = GetActorRightVector();
 	Inputs.TraversalDirection = Direction.IsNearlyZero() ? Inputs.CharacterForward : Direction.GetSafeNormal();
 
-	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	if (UCapsuleComponent *Capsule = GetCapsuleComponent())
 	{
 		Inputs.CapsuleRadius = Capsule->GetScaledCapsuleRadius();
 		Inputs.CapsuleHalfHeight = Capsule->GetScaledCapsuleHalfHeight();
@@ -340,8 +348,8 @@ FS_TraversalCheckInputs ACBP_AdventureCharacter::GetTraversalCheckInputs(FVector
 void ACBP_AdventureCharacter::TryTraversalAction(
 	FS_TraversalCheckInputs Inputs,
 	bool bEnableDebugDraw,
-	bool& TraversalCheckFailed,
-	bool& MontageSelectionFailed,
+	bool &TraversalCheckFailed,
+	bool &MontageSelectionFailed,
 	FS_TraversalCheckResult TraversalCheckResult,
 	FVector ActorLocation,
 	float CapsuleRadius,
@@ -351,7 +359,7 @@ void ACBP_AdventureCharacter::TryTraversalAction(
 	FHitResult TopSweepResult,
 	int32 DrawDebugLevel,
 	double DrawDebugDuration,
-	TArray<UAnimMontage*> ValidMontages)
+	TArray<UAnimMontage *> ValidMontages)
 {
 	UE_LOG(LogTemp, Log, TEXT("[Traversal] TryTraversalAction called (dir=%s)"), *Inputs.TraversalDirection.ToString());
 
@@ -405,12 +413,4 @@ void ACBP_AdventureCharacter::UpdatedMovementSimulated(FVector OldVelocity, bool
 void ACBP_AdventureCharacter::PlayAudioEvent(FGameplayTag Value, float VolumeMultiplier, float PitchMultiplier)
 {
 	// TODO: Play audio event with optional volume/pitch modulation
-}
-
-void ACBP_AdventureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// TODO: Register replicated properties for network synchronization
-	// Example: DOREPLIFETIME(ACBP_AdventureCharacter, CurrentInputState);
 }

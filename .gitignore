@@ -56,3 +56,6 @@ venv/
 
 # Local SQLite databases
 AI/mcp/*.db
+
+# Prevent checked-in UHT-generated headers
+*.generated.h
