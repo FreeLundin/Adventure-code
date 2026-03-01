@@ -13,10 +13,6 @@ class ADVENTURE_API UAdventureInteractableInterface : public UInterface
 
 /**
  * Interface that marks an object as interactable by the player or AI.
- *
- * This is a pure-UObject interface; implementors should provide logic
- * for `Interact` in C++ or Blueprint.  Use `ADV_INTERFACE_FUNC` macro
- * in other interfaces for convenience.
  */
 class ADVENTURE_API IAdventureInteractableInterface
 {
@@ -28,5 +24,5 @@ public:
      * Default behavior is no-op; override in blueprint or C++.
      */
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interaction")
-    void Interact(AActor* Instigator);
+    void Interact(AActor* InteractingActor);
 };

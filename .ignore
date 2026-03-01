@@ -4,7 +4,6 @@
 /.vs
 /.vscode
 /AI
-/Azure_UE_MCP_AGENT
 /Content
 /DerivedDataCache
 /Design Document
@@ -12,8 +11,4 @@
 /infra
 /Intermediate
 /Saved
-/scripts
 /Tools
-/Update_GASP
-/Plugins/AdventureUHT/Intermediate
-/Plugins/UE_PAIRED_PROGRAMMER_PLUGIN/Intermediate

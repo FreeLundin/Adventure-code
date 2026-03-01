@@ -17,4 +17,4 @@ void FAdventureModule::ShutdownModule()
     // is currently disabled to avoid build errors.
 }
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FAdventureModule, Adventure, "Adventure" );
+// Module registration is provided by Adventure.cpp. Do not define IMPLEMENT_PRIMARY_GAME_MODULE here.
