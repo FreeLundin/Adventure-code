@@ -8,9 +8,11 @@ The following items correspond to the task templates defined in the implementati
 **Description:** Create camera component supporting TopDown/ThirdPerson/FirstPerson modes. Mouse wheel cycles through modes with smooth transitions. Each mode tuned for specific use: TopDown (traversal/puzzle), ThirdPerson (combat/exploration), FirstPerson (immersion/detail inspection).
 **Acceptance:** Mouse wheel cycles camera modes; each mode has appropriate FOV and offset; transitions are smooth (<0.5s blend).
 
-### RE-001: Implement Ritual Energy AttributeSet with Decay
+### RE-001: Implement Ritual Energy AttributeSet with Decay *(completed)*
 **Description:** Create `AS_RitualEnergy` with float attribute (0-100 range). Implement passive decay (-1/sec after 8s out of combat). Expose to HUD with prominent bar visualization showing current value and decay state.
 **Acceptance:** Ritual Energy decays correctly; combat prevents decay; HUD shows real-time updates; decay starts after 8s out of combat.
+
+*Implementation added to `AAdventurePlayerState` tick and controller/HUD.*
 
 ### TODO-INPUT: Bind Enhanced Input & Controller Logic
 **Description:** Resolve the TODOs in `PC_AdventureController.cpp` around enhanced input bindings, movement forwarding, camera rotation, sensitivity settings, and ability activation. These are foundational for playtesting.

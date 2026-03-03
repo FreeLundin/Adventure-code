@@ -3,6 +3,8 @@
 
 #include "GAS/AdventureGameplayAbility.h"
 #include "GAS/AdventureGameplayTags.h"
+#include "GAS/AdventureAttributeSet.h"
+#include "Core/AdventurePlayerState.h"
 
 // traversal logic needs access to our character types
 #include "Character/CBP_AdventureCharacter.h"
@@ -13,6 +15,39 @@ UAdventureGameplayAbility::UAdventureGameplayAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+}
+
+void UAdventureGameplayAbility::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo *ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData *TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	// notify player state about combat action (reset decay timer)
+	if (ActorInfo && ActorInfo->OwnerActor.IsValid())
+	{
+		if (AAdventurePlayerState *PS = Cast<AAdventurePlayerState>(ActorInfo->OwnerActor.Get()))
+		{
+			PS->OnAbilityUsed();
+		}
+	}
+
+	// forward to blueprint if implemented
+	BP_OnActivated();
+}
+
+void UAdventureGameplayAbility::EndAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo *ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility, bool bWasCancelled)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	// notify blueprint
+	BP_OnEnded(bWasCancelled);
 }
 
 UGA_AdventureSprint::UGA_AdventureSprint()
@@ -38,9 +73,9 @@ UGA_AdventureTraversal::UGA_AdventureTraversal()
 
 void UGA_AdventureTraversal::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActorInfo *ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+	const FGameplayEventData *TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
@@ -48,12 +83,12 @@ void UGA_AdventureTraversal::ActivateAbility(
 	if (ActorInfo && ActorInfo->AvatarActor.IsValid())
 	{
 		// try mover variant first (calls blueprint hooks)
-		if (ACBP_AdventureCharacter_Mover* Mover = Cast<ACBP_AdventureCharacter_Mover>(ActorInfo->AvatarActor.Get()))
+		if (ACBP_AdventureCharacter_Mover *Mover = Cast<ACBP_AdventureCharacter_Mover>(ActorInfo->AvatarActor.Get()))
 		{
 			// blueprint side will decide vault/mantle/climb based on context
 			Mover->RequestTraversalVault();
 		}
-		else if (ACBP_AdventureCharacter* Char = Cast<ACBP_AdventureCharacter>(ActorInfo->AvatarActor.Get()))
+		else if (ACBP_AdventureCharacter *Char = Cast<ACBP_AdventureCharacter>(ActorInfo->AvatarActor.Get()))
 		{
 			// fallback for legacy character: perform a simple query that uses forward vector
 			FVector Direction = Char->GetLastMovementInputVector();
@@ -66,11 +101,11 @@ void UGA_AdventureTraversal::ActivateAbility(
 			bool bMontageSelectionFailed = true;
 			FS_TraversalCheckResult Result;
 			Char->TryTraversalAction(Inputs, false, bTraversalCheckFailed, bMontageSelectionFailed, Result,
-				Char->GetActorLocation(),
-				Char->GetCapsuleComponent()->GetScaledCapsuleRadius(),
-				Char->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
-				FVector::ZeroVector, FVector::ZeroVector,
-				FHitResult(), 0, 0.0, TArray<UAnimMontage*>());
+									 Char->GetActorLocation(),
+									 Char->GetCapsuleComponent()->GetScaledCapsuleRadius(),
+									 Char->GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
+									 FVector::ZeroVector, FVector::ZeroVector,
+									 FHitResult(), 0, 0.0, TArray<UAnimMontage *>());
 		}
 	}
 
@@ -83,4 +118,53 @@ UGA_AdventureInteract::UGA_AdventureInteract()
 	FGameplayTagContainer Tags;
 	Tags.AddTag(AdventureGameplayTags::Ability_Interact);
 	SetAssetTags(Tags);
+}
+
+UGA_AdventureLightAttack::UGA_AdventureLightAttack()
+{
+	FGameplayTagContainer Tags;
+	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Light);
+	SetAssetTags(Tags);
+}
+
+void UGA_AdventureLightAttack::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo *ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData *TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	// grant small ritual energy bonus to self
+	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
+	{
+		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 3.0f);
+	}
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+UGA_AdventureHeavyAttack::UGA_AdventureHeavyAttack()
+{
+	FGameplayTagContainer Tags;
+	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Heavy);
+	SetAssetTags(Tags);
+}
+
+void UGA_AdventureHeavyAttack::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo *ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData *TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
+	{
+		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 8.0f);
+	}
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }

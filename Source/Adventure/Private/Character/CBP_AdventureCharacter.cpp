@@ -17,6 +17,7 @@
 #include "Components/CapsuleComponent.h" // needed for capsule access
 
 ACBP_AdventureCharacter::ACBP_AdventureCharacter()
+	: CachedCharMovement(nullptr), CachedAdventureController(nullptr)
 {
 	AbilitySystemComponent = nullptr;
 
@@ -34,8 +35,12 @@ ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 		CharMovement->bOrientRotationToMovement = true;
 		CharMovement->MaxWalkSpeed = 600.0f;
 		CharMovement->MaxAcceleration = 2048.0f;
+		CachedCharMovement = CharMovement;
 	}
 
+	// Start with tick disabled for proxies; owner will enable as needed
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 	// Initialize movement state (defaults will be used from header declarations)
 	// Gait, speeds, and other properties are initialized via UPROPERTY defaults
 
@@ -43,7 +48,9 @@ ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 		UGA_AdventureSprint::StaticClass(),
 		UGA_AdventureDodge::StaticClass(),
 		UGA_AdventureTraversal::StaticClass(),
-		UGA_AdventureInteract::StaticClass()};
+		UGA_AdventureInteract::StaticClass(),
+		UGA_AdventureLightAttack::StaticClass(),
+		UGA_AdventureHeavyAttack::StaticClass()};
 
 	DefaultAttributesEffect = UGE_AdventureDefaultAttributes::StaticClass();
 }
@@ -52,10 +59,9 @@ void ACBP_AdventureCharacter::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
 	InitializeAbilitySystem();
-}
 
-void ACBP_AdventureCharacter::OnRep_PlayerState()
-{
+	// once possessed, setup input bindings and cache references
+	SetupInput();
 	Super::OnRep_PlayerState();
 	InitializeAbilitySystem();
 }
@@ -84,16 +90,42 @@ void ACBP_AdventureCharacter::InitializeAbilitySystem()
 
 FVector2D ACBP_AdventureCharacter::GetMovementInputScaleValue(FVector2D Input)
 {
-	// TODO: Implement dead-zone and sensitivity scaling
-	return Input;
+	// apply a small dead zone to reduce stick drift
+	const float DeadZone = 0.1f;
+	float X = FMath::Abs(Input.X) < DeadZone ? 0.0f : Input.X;
+	float Y = FMath::Abs(Input.Y) < DeadZone ? 0.0f : Input.Y;
+
+	// optional: further scale input (e.g. square for sensitivity curve)
+	X = FMath::Sign(X) * FMath::Square(FMath::Abs(X));
+	Y = FMath::Sign(Y) * FMath::Square(FMath::Abs(Y));
+
+	return FVector2D(X, Y);
 }
 
 void ACBP_AdventureCharacter::SetupInput()
 {
-	// TODO: Bind input actions to character functions
-	// Called by PlayerController to set up input mappings
-}
+	// cache movement component in case it wasn't cached in constructor
+	if (!CachedCharMovement)
+	{
+		CachedCharMovement = GetCharacterMovement();
+	}
 
+	// cache controller as our custom AdventureController type
+	if (Controller && !CachedAdventureController)
+	{
+		CachedAdventureController = Cast<APC_AdventureController>(Controller);
+	}
+
+	// Allow this pawn to tick if we are locally controlled (input will arrive)
+	if (IsLocallyControlled())
+	{
+		SetActorTickEnabled(true);
+	}
+
+	// note: actual binding of input actions is performed on the controller
+	// via the enhanced input setup.  Character-specific action handlers can
+	// be exposed as BlueprintImplementableEvents if needed.
+}
 void ACBP_AdventureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -104,55 +136,64 @@ void ACBP_AdventureCharacter::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 
 bool ACBP_AdventureCharacter::HasMovementInputVector()
 {
-	// TODO: Query current movement input state
-	return false;
+	FVector2D Input(GetLastMovementInputVector());
+	// treat very small values as zero
+	return !Input.IsNearlyZero(0.05f);
 }
 
 bool ACBP_AdventureCharacter::CanSprint()
 {
-	// TODO: Check stamina and movement prerequisites for sprint
-	return true;
-}
-
-void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
-{
-	// Guard: Only process on owner (client-side prediction)
-	if (!IsLocallyControlled())
+	// basic preconditions: must be moving and not crouched
+	if (!HasMovementInputVector())
 	{
-		return;
+		return false;
+	}
+	if (CachedCharMovement && CachedCharMovement->IsCrouching())
+	{
+		return false;
 	}
 
-	// Get character movement component
-	UCharacterMovementComponent *CharMC = GetCharacterMovement();
-	if (!CharMC)
+	// stamina or ability checks could go here, e.g. query ASC for a sprint tag
+	// if (AbilitySystemComponent && AbilitySystemComponent->HasMatchingGameplayTag(...))
+	//     return false;
+
+	void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 	{
-		return;
-	}
+		// Guard: Only process on owner (client-side prediction)
+		if (!IsLocallyControlled())
+		{
+			return;
+		}
 
-	// Get current movement input vector (WASD or analog stick)
-	// This is consumed from the input buffer by the character movement system
-	FVector InputDirection = GetLastMovementInputVector();
+		// Get character movement component (cached if available)
+		UCharacterMovementComponent *CharMC = CachedCharMovement ? CachedCharMovement : GetCharacterMovement();
+		if (!CharMC)
+		{
+			return;
+		}
 
-	// Guard: No input
-	if (InputDirection.IsZero())
-	{
-		// TODO: Decelerate smoothly if moving
-		return;
-	}
+		// Get current movement input vector (WASD or analog stick)
+		// This is consumed from the input buffer by the character movement system
+		FVector InputDirection = GetLastMovementInputVector();
 
-	// Determine desired gait based on input and sprint state
-	// For now: Use simple speed mapping
-	//   - Walk: Normal speed (from WalkSpeeds)
-	//   - Run: Increased speed (from RunSpeeds)
-	//   - Sprint: Maximum speed (from SprintSpeeds) if stamina available
+		// Guard: No input
+		if (InputDirection.IsZero())
+		{
+			// TODO: Decelerate smoothly if moving
+			return;
+		}
 
-	FVector MaxSpeed = WalkSpeeds; // Default to walk speeds
+		// Determine desired gait based on input and sprint state
+		// For now: Use simple speed mapping
+		//   - Walk: Normal speed (from WalkSpeeds)
+		//   - Run: Increased speed (from RunSpeeds)
+		//   - Sprint: Maximum speed (from SprintSpeeds) if stamina available
 
-	// TODO: Check if sprinting (check GAS ability state or sprint input)
-	// For now, if moving, use run speeds
-	if (HasMovementInputVector())
-	{
-		MaxSpeed = RunSpeeds;
+		FVector MaxSpeed = WalkSpeeds; // Default to walk speeds
+
+		// TODO: Check if sprinting (check GAS ability state or sprint input)
+		// For now, if moving, use run speeds
+		if (CanSprint())
 	}
 
 	// Apply movement to character movement component
@@ -182,6 +223,83 @@ void ACBP_AdventureCharacter::UpdateMovement_PreCMC()
 // OnCustomAction_Implementation is provided by the UFUNCTION macro via GENERATED_BODY()
 // and should be implemented only once in this cpp file if needed. Keep this file
 // with no duplicate definitions to avoid linkage issues.
+
+// ------------------------------------------------------------------
+// Optimization subclass implementation
+// ------------------------------------------------------------------
+
+void ACBP_AdventureCharacter_CMC::Tick(float DeltaSeconds)
+{
+	// call parent to preserve normal behavior (abilities, animation updates, etc.)
+	Super::Tick(DeltaSeconds);
+
+	// compute cached values once per frame then feed into PreCMC hooks
+	ComputeCachedMovementValues();
+
+	// if there's no input, skip the expensive updates entirely
+	if (!IsLocallyControlled() || CachedMovementInput.IsNearlyZero(0.05f))
+	{
+		return;
+	}
+
+	UpdateMovement_PreCMC();
+	UpdateRotation_PreCMC();
+	if (StrafeSpeedMapCurve)
+	{
+		// example: assume X axis corresponds to yaw difference between velocity and forward
+		float Angle = 0.0f;
+		if (!CachedMovementInput.IsNearlyZero())
+		{
+			FVector Input3D(CachedMovementInput, 0.0f);
+			Angle = FMath::Abs(FMath::Acos(FVector::DotProduct(Input3D.GetSafeNormal(), GetActorForwardVector())));
+			Angle = FMath::Clamp(Angle / PI, 0.0f, 1.0f);
+		}
+		CachedStrafeSpeedMap = StrafeSpeedMapCurve->GetFloatValue(Angle);
+	}
+}
+
+void ACBP_AdventureCharacter_CMC::UpdateMovement_PreCMC()
+{
+	// use cached values to avoid calling into blueprint nodes repeatedly
+	FVector2D Input = CachedMovementInput;
+	if (Input.IsNearlyZero())
+	{
+		return;
+	}
+
+	// simplified logic here; most of the blueprint graph is now executed in C++
+	UCharacterMovementComponent *CharMC = GetCharacterMovement();
+	if (!CharMC)
+		return;
+
+	// determine speed vector based on gait and cached strafe map
+	double MaxSpeed = CalculateMaxSpeed(CachedStrafeSpeedMap);
+	FVector Direction3D(Input, 0.0f);
+	Direction3D = Direction3D.GetClampedToMaxSize(1.0f);
+
+	FVector DesiredVel = (GetActorForwardVector() * Direction3D.X +
+						  GetActorRightVector() * Direction3D.Y) *
+						 MaxSpeed;
+
+	CharMC->Velocity.X = DesiredVel.X;
+	CharMC->Velocity.Y = DesiredVel.Y;
+}
+
+void ACBP_AdventureCharacter_CMC::UpdateRotation_PreCMC()
+{
+	// rely on the base implementation but use cached input to minimize cost
+	FVector2D Input = CachedMovementInput;
+	if (Input.IsNearlyZero())
+		return;
+
+	// derive world direction
+	FVector WorldDir(Input, 0.0f);
+	WorldDir.Normalize();
+	FRotator DesiredRot = WorldDir.Rotation();
+	FRotator CurrRot = GetActorRotation();
+	FRotator NewRot = FMath::RInterpTo(CurrRot, DesiredRot, GetWorld()->DeltaTimeSeconds, 15.0f);
+	SetActorRotation(NewRot);
+}
 
 void ACBP_AdventureCharacter::UpdateRotation_PreCMC()
 {

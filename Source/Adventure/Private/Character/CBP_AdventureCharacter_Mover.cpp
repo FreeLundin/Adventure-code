@@ -44,8 +44,9 @@ ACBP_AdventureCharacter_Mover::ACBP_AdventureCharacter_Mover()
 		UGA_AdventureSprint::StaticClass(),
 		UGA_AdventureDodge::StaticClass(),
 		UGA_AdventureTraversal::StaticClass(),
-		UGA_AdventureInteract::StaticClass()
-	};
+		UGA_AdventureInteract::StaticClass(),
+		UGA_AdventureLightAttack::StaticClass(),
+		UGA_AdventureHeavyAttack::StaticClass()};
 
 	DefaultAttributesEffect = UGE_AdventureDefaultAttributes::StaticClass();
 }
@@ -65,7 +66,7 @@ void ACBP_AdventureCharacter_Mover::PostInitializeComponents()
 	}
 }
 
-void ACBP_AdventureCharacter_Mover::PossessedBy(AController* NewController)
+void ACBP_AdventureCharacter_Mover::PossessedBy(AController *NewController)
 {
 	Super::PossessedBy(NewController);
 	InitializeAbilitySystem();
@@ -77,14 +78,14 @@ void ACBP_AdventureCharacter_Mover::OnRep_PlayerState()
 	InitializeAbilitySystem();
 }
 
-UAbilitySystemComponent* ACBP_AdventureCharacter_Mover::GetAbilitySystemComponent() const
+UAbilitySystemComponent *ACBP_AdventureCharacter_Mover::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
 void ACBP_AdventureCharacter_Mover::InitializeAbilitySystem()
 {
-	AAdventurePlayerState* AdventurePS = GetPlayerState<AAdventurePlayerState>();
+	AAdventurePlayerState *AdventurePS = GetPlayerState<AAdventurePlayerState>();
 	if (!AdventurePS)
 	{
 		return;
@@ -103,7 +104,7 @@ void ACBP_AdventureCharacter_Mover::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	if (APlayerController *PC = Cast<APlayerController>(GetController()))
 	{
 		const float LookRate = 100.0f * LookSensitivity;
 		const float PitchScale = bInvertLookY ? 1.0f : -1.0f;
@@ -115,11 +116,11 @@ void ACBP_AdventureCharacter_Mover::Tick(float DeltaTime)
 	CachedLookInput = FVector2D::ZeroVector;
 }
 
-void ACBP_AdventureCharacter_Mover::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ACBP_AdventureCharacter_Mover::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (UEnhancedInputComponent* Input = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	if (UEnhancedInputComponent *Input = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		if (MoveInputAction)
 		{
@@ -153,11 +154,11 @@ void ACBP_AdventureCharacter_Mover::SetupPlayerInputComponent(UInputComponent* P
 	}
 }
 
-void ACBP_AdventureCharacter_Mover::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext& InputCmdResult)
+void ACBP_AdventureCharacter_Mover::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext &InputCmdResult)
 {
 	OnProduceInput(static_cast<float>(SimTimeMs), InputCmdResult);
 
-	FCharacterDefaultInputs& CharacterInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FCharacterDefaultInputs>();
+	FCharacterDefaultInputs &CharacterInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FCharacterDefaultInputs>();
 
 	CharacterInputs.SetMoveInput(EMoveInputType::DirectionalIntent, CachedMoveInputIntent);
 	CharacterInputs.OrientationIntent = CachedMoveInputIntent.IsNearlyZero() ? FVector::ZeroVector : CachedMoveInputIntent.GetSafeNormal();
@@ -170,17 +171,17 @@ void ACBP_AdventureCharacter_Mover::ProduceInput_Implementation(int32 SimTimeMs,
 	InputCmdResult = OnProduceInputInBlueprint(static_cast<float>(SimTimeMs), InputCmdResult);
 }
 
-void ACBP_AdventureCharacter_Mover::OnProduceInput(float DeltaMs, FMoverInputCmdContext& InputCmdResult)
+void ACBP_AdventureCharacter_Mover::OnProduceInput(float DeltaMs, FMoverInputCmdContext &InputCmdResult)
 {
 	// Optional override for native extension of input production
 }
 
-void ACBP_AdventureCharacter_Mover::SetMoveInputVector(const FVector2D& MoveInput)
+void ACBP_AdventureCharacter_Mover::SetMoveInputVector(const FVector2D &MoveInput)
 {
 	CachedMoveInputIntent = FVector(MoveInput.X, MoveInput.Y, 0.0f);
 }
 
-void ACBP_AdventureCharacter_Mover::SetLookInputVector(const FVector2D& LookInput)
+void ACBP_AdventureCharacter_Mover::SetLookInputVector(const FVector2D &LookInput)
 {
 	CachedLookInput = LookInput;
 }
@@ -208,10 +209,10 @@ void ACBP_AdventureCharacter_Mover::RequestTraversalVault()
 
 void ACBP_AdventureCharacter_Mover::OnTraversalRequestVault_Implementation()
 {
-    // default native behaviour for the Mover variant: delegate traversal to the owning character
-    UE_LOG(LogTemp, Log, TEXT("[Traversal] Mover vault request (stub)"));
-    // The Mover implementation does not implement character traversal checks here.
-    // If you need traversal for Mover, implement logic in Blueprint or in a game-specific subclass.
+	// default native behaviour for the Mover variant: delegate traversal to the owning character
+	UE_LOG(LogTemp, Log, TEXT("[Traversal] Mover vault request (stub)"));
+	// The Mover implementation does not implement character traversal checks here.
+	// If you need traversal for Mover, implement logic in Blueprint or in a game-specific subclass.
 }
 
 void ACBP_AdventureCharacter_Mover::OnTraversalRequestMantle_Implementation()
@@ -236,54 +237,54 @@ void ACBP_AdventureCharacter_Mover::RequestTraversalClimb()
 	OnTraversalRequestClimb();
 }
 
-void ACBP_AdventureCharacter_Mover::OnMoveTriggered(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnMoveTriggered(const FInputActionValue &Value)
 {
 	const FVector2D Input = Value.Get<FVector2D>();
 	SetMoveInputVector(Input);
 }
 
-void ACBP_AdventureCharacter_Mover::OnMoveCompleted(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnMoveCompleted(const FInputActionValue &Value)
 {
 	SetMoveInputVector(FVector2D::ZeroVector);
 }
 
-void ACBP_AdventureCharacter_Mover::OnLookTriggered(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnLookTriggered(const FInputActionValue &Value)
 {
 	const FVector2D Input = Value.Get<FVector2D>();
 	SetLookInputVector(Input);
 }
 
-void ACBP_AdventureCharacter_Mover::OnLookCompleted(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnLookCompleted(const FInputActionValue &Value)
 {
 	SetLookInputVector(FVector2D::ZeroVector);
 }
 
-void ACBP_AdventureCharacter_Mover::OnJumpStarted(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnJumpStarted(const FInputActionValue &Value)
 {
 	SetJumpPressed(true);
 }
 
-void ACBP_AdventureCharacter_Mover::OnJumpReleased(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnJumpReleased(const FInputActionValue &Value)
 {
 	SetJumpPressed(false);
 }
 
-void ACBP_AdventureCharacter_Mover::OnSprintStarted(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnSprintStarted(const FInputActionValue &Value)
 {
 	SetSprintPressed(true);
 }
 
-void ACBP_AdventureCharacter_Mover::OnSprintReleased(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnSprintReleased(const FInputActionValue &Value)
 {
 	SetSprintPressed(false);
 }
 
-void ACBP_AdventureCharacter_Mover::OnCrouchStarted(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnCrouchStarted(const FInputActionValue &Value)
 {
 	SetCrouchPressed(true);
 }
 
-void ACBP_AdventureCharacter_Mover::OnCrouchReleased(const FInputActionValue& Value)
+void ACBP_AdventureCharacter_Mover::OnCrouchReleased(const FInputActionValue &Value)
 {
 	SetCrouchPressed(false);
 }

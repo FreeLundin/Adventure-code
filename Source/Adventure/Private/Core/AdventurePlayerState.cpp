@@ -8,6 +8,8 @@
 
 AAdventurePlayerState::AAdventurePlayerState()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
@@ -15,12 +17,44 @@ AAdventurePlayerState::AAdventurePlayerState()
 	AttributeSet = CreateDefaultSubobject<UAdventureAttributeSet>(TEXT("AttributeSet"));
 }
 
-UAbilitySystemComponent* AAdventurePlayerState::GetAbilitySystemComponent() const
+void AAdventurePlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+	// ensure timer starts at 0
+	TimeSinceCombat = 0.0f;
+}
+
+void AAdventurePlayerState::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (GetLocalRole() == ROLE_Authority && AbilitySystemComponent)
+	{
+		TimeSinceCombat += DeltaTime;
+		if (TimeSinceCombat >= 8.0f)
+		{
+			float Current = AbilitySystemComponent->GetNumericAttribute(
+				UAdventureAttributeSet::GetRitualEnergyAttribute());
+			if (Current > 0.f)
+			{
+				FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+				AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, -DeltaTime);
+			}
+		}
+	}
+}
+
+void AAdventurePlayerState::OnAbilityUsed()
+{
+	TimeSinceCombat = 0.0f;
+}
+
+UAbilitySystemComponent *AAdventurePlayerState::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
-void AAdventurePlayerState::InitializeAbilitySystem(AActor* AvatarActor, const TArray<TSubclassOf<UGameplayAbility>>& Abilities, TSubclassOf<UGameplayEffect> DefaultAttributesEffect)
+void AAdventurePlayerState::InitializeAbilitySystem(AActor *AvatarActor, const TArray<TSubclassOf<UGameplayAbility>> &Abilities, TSubclassOf<UGameplayEffect> DefaultAttributesEffect)
 {
 	if (!AbilitySystemComponent || !AvatarActor)
 	{
@@ -31,11 +65,12 @@ void AAdventurePlayerState::InitializeAbilitySystem(AActor* AvatarActor, const T
 
 	if (GetLocalRole() == ROLE_Authority && !bAbilitiesGranted)
 	{
-		for (const TSubclassOf<UGameplayAbility>& AbilityClass : Abilities)
+		for (const TSubclassOf<UGameplayAbility> &AbilityClass : Abilities)
 		{
 			if (*AbilityClass)
 			{
-				AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass, 1));
+				// use helper so we track the handle
+				GrantAbility(AbilityClass, 1, -1);
 			}
 		}
 
@@ -52,5 +87,37 @@ void AAdventurePlayerState::InitializeAbilitySystem(AActor* AvatarActor, const T
 		}
 
 		bAbilitiesGranted = true;
+	}
+}
+
+FGameplayAbilitySpecHandle AAdventurePlayerState::GrantAbility(TSubclassOf<UGameplayAbility> AbilityClass, int32 Level, int32 InputID)
+{
+	FGameplayAbilitySpecHandle Handle;
+	if (AbilitySystemComponent && *AbilityClass && HasAuthority())
+	{
+		FGameplayAbilitySpec Spec(AbilityClass, Level, InputID);
+		Handle = AbilitySystemComponent->GiveAbility(Spec);
+		if (Handle.IsValid())
+		{
+			GrantedAbilityHandles.Add(AbilityClass, Handle);
+		}
+	}
+	return Handle;
+}
+
+void AAdventurePlayerState::RemoveAbility(const FGameplayAbilitySpecHandle Handle)
+{
+	if (AbilitySystemComponent && Handle.IsValid() && HasAuthority())
+	{
+		AbilitySystemComponent->ClearAbility(Handle);
+		// remove from our map if present
+		for (auto It = GrantedAbilityHandles.CreateIterator(); It; ++It)
+		{
+			if (It.Value() == Handle)
+			{
+				It.RemoveCurrent();
+				break;
+			}
+		}
 	}
 }

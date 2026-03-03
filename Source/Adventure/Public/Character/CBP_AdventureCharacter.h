@@ -26,7 +26,7 @@ class UPhysicalAnimationComponent;
 
 /**
  * ACBP_AdventureCharacter
- * 
+ *
  * Advanced locomotion and traversal character for the Adventure prototype (Phase 1+).
  * This class provides a foundation for kinetic, parkour-like movement combining:
  *   - Multi-perspective camera system (TopDown/ThirdPerson/FirstPerson)
@@ -36,25 +36,25 @@ class UPhysicalAnimationComponent;
  *   - Water-based traversal (swimming)
  *   - Motion warping for smooth transitions and animation-to-world synchronization
  *   - Audio event system for footsteps and action feedback
- * 
+ *
  * Integration Points:
  *   - Designed to work with GAS (Gameplay Ability System) for abilities and effects
  *   - Accepts RitualEnergy AttributeSet for ability resource management
  *   - Supports networked replication for multiplayer-ready architecture
  *   - Uses Enhanced Input System for flexible input mapping
- * 
+ *
  * Animation System:
  *   - Supports both montage-based and motion-matching animation workflows
  *   - Exposes movement state (gait, landing velocity, traversal status) to AnimBlueprint
  *   - Provides motion warping for precise character positioning during animations
- * 
+ *
  * Usage:
  *   1. Reparent or extend this class in Blueprint as CBP_AdventureCharacter
  *   2. Configure camera styles and traversal components in Blueprint defaults
  *   3. Bind input actions via SetupInput() and input mapping context
  *   4. Enable desired traversal systems (climbing, swimming, ziplining, etc.)
  *   5. Integrate with PlayerController and HUD for feedback
- * 
+ *
  * @see UGameplayCameraComponent for camera behavior
  * @see FS_TraversalCheckInputs, FS_TraversalCheckResult for traversal query system
  * @see FS_CharacterInputState for input state replication
@@ -70,28 +70,41 @@ public:
 	/** Constructor */
 	ACBP_AdventureCharacter();
 
-    // BlueprintNativeEvent that can be overridden in either C++ or BP
-    ADV_NATIVE_EVENT()
-    void OnCustomAction();
+	// ===== CACHED REFERENCES =====
 
+	/**
+	 * Cache frequently accessed components/controllers to avoid repeated
+	 * Get* calls in the tick path.  These are populated in SetupInput() or
+	 * when the pawn is possessed.
+	 */
+	UPROPERTY()
+	UCharacterMovementComponent *CachedCharMovement;
 
+	UPROPERTY()
+	class APC_AdventureController *CachedAdventureController;
 	// ===== GAS INITIALIZATION =====
 
-	virtual void PossessedBy(AController* NewController) override;
+	virtual void PossessedBy(AController *NewController) override;
 	virtual void OnRep_PlayerState() override;
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	virtual UAbilitySystemComponent *GetAbilitySystemComponent() const override;
 	virtual void InitializeAbilitySystem() override;
-	virtual const TArray<TSubclassOf<UGameplayAbility>>& GetDefaultAbilities() const override { return DefaultAbilities; }
+	virtual const TArray<TSubclassOf<UGameplayAbility>> &GetDefaultAbilities() const override { return DefaultAbilities; }
 	virtual TSubclassOf<UGameplayEffect> GetDefaultAttributesEffect() const override { return DefaultAttributesEffect; }
 
 	// ===== INPUT & MOVEMENT QUERIES =====
 
+	// The following helper methods are intentionally kept small and marked
+	// BlueprintPure/Callable so that the overhead of calling them from the
+	// animation blueprint or other scripts is minimal.  For more complex
+	// logic that previously lived in the BP graph you can implement a
+	// native version in C++ (see ACBP_AdventureCharacter_CMC below) and expose
+	// a thin wrapper to maintain backwards compatibility.
 	/**
 	 * GetMovementInputScaleValue
-	 * 
+	 *
 	 * Processes raw analog stick input (Range: -1 to 1) and applies sensitivity/dead-zone scaling.
 	 * Used to normalize and smooth input vectors before passing to movement system.
-	 * 
+	 *
 	 * @param Input		Raw input from analog stick (typically -1 to 1 on each axis)
 	 * @return			Scaled/normalized movement input vector
 	 */
@@ -99,33 +112,15 @@ public:
 	FVector2D GetMovementInputScaleValue(FVector2D Input);
 
 	/**
-	 * SetupInput
-	 * 
-	 * Initializes input bindings and action mappings for the character.
-	 * Called during PlayerController setup to establish input context.
-	 * Binds movement, camera toggle, abilities, and interact actions.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Input")
-	void SetupInput();
-
-	/**
-	 * HasMovementInputVector
-	 * 
-	 * Queries whether the character currently has non-zero movement input.
-	 * Used for state machine transitions and ability activation gating.
-	 * 
-	 * @return			True if player is providing directional input, false otherwise
+	 * Returns true if a non-trivial movement vector is currently being
+	 * supplied by the player.  Used by gait, sprint and animation logic.
 	 */
 	UFUNCTION(BlueprintPure, Category = "Movement")
 	bool HasMovementInputVector();
 
 	/**
-	 * CanSprint
-	 * 
-	 * Evaluates whether character is able to enter sprint state.
-	 * Checks stamina (if applicable via GAS), input, and movement prerequisites.
-	 * 
-	 * @return			True if sprint conditions are met, false if blocked or resource throttled
+	 * Basic sprint gating logic.  Can be expanded to query GAS abilities or
+	 * stamina attributes as needed.
 	 */
 	UFUNCTION(BlueprintPure, Category = "Movement")
 	bool CanSprint();
@@ -134,39 +129,50 @@ public:
 
 	/**
 	 * UpdateMovement_PreCMC
-	 * 
+	 *
 	 * Pre-character movement component update hook called before CMC tick.
 	 * Applies input-based acceleration, velocity, and state updates.
 	 * Typically called from AnimBlueprint or PlayerController input processing.
-	 * 
+	 *
 	 * @see UpdateRotation_PreCMC for simultaneous rotation updates
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void UpdateMovement_PreCMC();
+	virtual void UpdateMovement_PreCMC();
+
+	/**
+	 * Helper that populates cached references and performs any one-time
+	 * initialization that depends on PlayerController being valid.
+	 * Called by APC_AdventureController::Possess() and can be invoked manually
+	 * if the character is spawned dynamically.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	void SetupInput();
 
 	/**
 	 * UpdateRotation_PreCMC
-	 * 
+	 *
 	 * Pre-character movement component rotation update called before CMC tick.
 	 * Rotates character toward look direction based on camera style and input.
 	 * Handles smooth rotation interpolation and strafing angle calculation.
-	 * 
+	 *
 	 * @see UpdateMovement_PreCMC for simultaneous movement updates
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Movement")
-	void UpdateRotation_PreCMC();
-
+	virtual void UpdateRotation_PreCMC();
 	/**
 	 * GetDesiredGait
-	 * 
-	 * Determines target movement gait (Walk/Run/Sprint) based on input and character state.
+	 *
+	 * Determines target movement gait (Walk / Run / Sprint) based on input and character state.
 	 * Uses curve-based speed mapping and input magnitude to smooth gait transitions.
-	 * 
-	 * @param FullMovementInput	If true, player has full analog stick deflection; false means partial input
-	 * @return					Desired gait enum (Walk, Run, or Sprint)
+	 *
+	 * @param FullMovementInput If true, player has full analog stick deflection;
+	 *        false means partial input.
+	 * @return Desired gait enum (Walk, Run, or Sprint)
 	 */
 	UFUNCTION(BlueprintPure, Category = "Movement")
 	TEnumAsByte<E_Gait> GetDesiredGait(bool FullMovementInput);
+
+	// move CMC subclass to after the closing brace of the main class
 
 	// ===== GAS CONFIGURATION =====
 
@@ -187,11 +193,11 @@ public:
 
 	/**
 	 * CalculateMaxSpeed
-	 * 
+	 *
 	 * Queries the movement system's desired maximum velocity for current gait and strafe direction.
 	 * References StrafeSpeedMapCurve for smooth speed ramping.
 	 * Gait-specific speeds (Walk/Run/Sprint) are applied based on current state.
-	 * 
+	 *
 	 * @param StrafeSpeedMap	Normalized strafe angle input (0-1) for curve lookup
 	 * @return				Maximum speed in cm/s for current movement state
 	 */
@@ -200,11 +206,11 @@ public:
 
 	/**
 	 * CalculateMaxAcceleration
-	 * 
+	 *
 	 * Computes character acceleration magnitude based on strafe angle and gait.
 	 * Higher acceleration during forward/sprint movement; lower during strafing.
 	 * Influences how quickly character reaches max speed.
-	 * 
+	 *
 	 * @param StrafeSpeedMap	Normalized strafe angle (0-1)
 	 * @return				Acceleration magnitude (cm/s²)
 	 */
@@ -213,10 +219,10 @@ public:
 
 	/**
 	 * CalculateBrakingDeceleration
-	 * 
+	 *
 	 * Determines deceleration rate when character releases movement input.
 	 * Faster braking during forward movement; slower during strafing for planted control feel.
-	 * 
+	 *
 	 * @param StrafeSpeedMap	Normalized strafe angle (0-1)
 	 * @return				Braking deceleration magnitude (cm/s²)
 	 */
@@ -225,10 +231,10 @@ public:
 
 	/**
 	 * CalculateBrakingFriction
-	 * 
+	 *
 	 * Friction coefficient applied when character is sliding/decelerating.
 	 * Higher friction value = faster velocity reduction; affects "stickiness" to ground.
-	 * 
+	 *
 	 * @param StrafeSpeedMap	Normalized strafe angle (0-1)
 	 * @return				Braking friction coefficient
 	 */
@@ -237,10 +243,10 @@ public:
 
 	/**
 	 * CalculateGroundFriction
-	 * 
+	 *
 	 * Friction applied while character is moving on ground during active movement input.
 	 * Balances acceleration responsiveness with directional control.
-	 * 
+	 *
 	 * @param StrafeSpeedMap	Normalized strafe angle (0-1)
 	 * @return				Ground friction coefficient
 	 */
@@ -249,10 +255,10 @@ public:
 
 	/**
 	 * CalculateMaxCrouchSpeed
-	 * 
+	 *
 	 * Maximum velocity while character is in crouched state.
 	 * Typically lower than standing speeds; affected by strafe direction.
-	 * 
+	 *
 	 * @param StrafeSpeedMap	Normalized strafe angle (0-1)
 	 * @return				Maximum crouched speed (cm/s)
 	 */
@@ -263,27 +269,27 @@ public:
 
 	/**
 	 * SetupCamera
-	 * 
+	 *
 	 * Initializes camera components and attaches them to character.
 	 * Creates camera springs, offsets, and initial view targets.
 	 * Must be called during character possession or PlayerController setup.
-	 * 
+	 *
 	 * @param PlayerController	The controller possessing this character (used for view target setup)
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Camera")
-	void SetupCamera(APlayerController* PlayerController);
+	void SetupCamera(APlayerController *PlayerController);
 
 	// ===== TRAVERSAL SYSTEM =====
 
 	/**
 	 * GetTraversalCheckInputs
-	 * 
+	 *
 	 * Constructs traversal query parameters from character state and directional input.
 	 * Builds FS_TraversalCheckInputs struct containing:
 	 *   - Character position and orientation
 	 *   - Capsule dimensions and movement traces
 	 *   - Desired traversal direction (vault forward, climb up, etc.)
-	 * 
+	 *
 	 * @param Direction		Desired traversal direction (normalized vector)
 	 * @return				Populated traversal check inputs struct ready for traversal system queries
 	 */
@@ -292,11 +298,11 @@ public:
 
 	/**
 	 * TryTraversalAction
-	 * 
+	 *
 	 * Main entry point for initiating traversal actions (vault, mantle, climb, rope swing, etc.).
 	 * Performs collision checks, selects appropriate animation montage, and triggers traversal.
 	 * Handles both client-side prediction and server replication.
-	 * 
+	 *
 	 * @param Inputs							Traversal input parameters (position, direction, checks)
 	 * @param DebugType						Debug visualization mode (None, Wireframe, Solid)
 	 * @param TraversalCheckFailed			Output: true if collision/space checks failed
@@ -316,8 +322,8 @@ public:
 	void TryTraversalAction(
 		FS_TraversalCheckInputs Inputs,
 		bool bEnableDebugDraw,
-		bool& TraversalCheckFailed,
-		bool& MontageSelectionFailed,
+		bool &TraversalCheckFailed,
+		bool &MontageSelectionFailed,
 		FS_TraversalCheckResult TraversalCheckResult,
 		FVector ActorLocation,
 		float CapsuleRadius,
@@ -327,16 +333,15 @@ public:
 		FHitResult TopSweepResult,
 		int32 DrawDebugLevel,
 		double DrawDebugDuration,
-		TArray<UAnimMontage*> ValidMontages
-	);
+		TArray<UAnimMontage *> ValidMontages);
 
 	/**
 	 * UpdateWarpTargets
-	 * 
+	 *
 	 * Updates motion warp targets dynamically during traversal animations.
 	 * Used for rope swinging, zipline riding, and other continuous traversals.
 	 * Recalculates character root position to match animated paths.
-	 * 
+	 *
 	 * @param AnimatedDistanceFromFrontLedgeToBackLedge	Distance across traversal feature (e.g., gap width)
 	 * @param AnimatedDistanceFromFrontLedgeToBackFloor	Distance to landing surface
 	 */
@@ -345,11 +350,11 @@ public:
 
 	/**
 	 * Traversal_ServerImplementation
-	 * 
+	 *
 	 * Server-side implementation of traversal action execution.
 	 * Receives validated traversal result from client and applies it on server for replication.
 	 * Triggers montages, sets movement state, and broadcasts traversal events.
-	 * 
+	 *
 	 * @param TraversalRep		Validated traversal result struct from client prediction
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Traversal")
@@ -357,7 +362,7 @@ public:
 
 	/**
 	 * OnTraversalStart
-	 * 
+	 *
 	 * Event callback triggered when traversal action begins (montage starts).
 	 * Disables collision, caches velocity, optionally triggers audio/VFX.
 	 * Called during montage montage begin.
@@ -367,7 +372,7 @@ public:
 
 	/**
 	 * OnTraversalEnd
-	 * 
+	 *
 	 * Event callback triggered when traversal action completes (montage ends).
 	 * Re-enables collision, restores character control, transitions to normal locomotion.
 	 * Can trigger landing effects or trigger follow-up actions.
@@ -377,7 +382,7 @@ public:
 
 	/**
 	 * OnRep_TraversalResult
-	 * 
+	 *
 	 * Replication callback invoked when TraversalResult property updates on clients.
 	 * Synchronizes traversal state across network for other players.
 	 * Updates montage playback and motion warping on remote instances.
@@ -389,11 +394,11 @@ public:
 
 	/**
 	 * UpdatedMovementSimulated
-	 * 
+	 *
 	 * Called when character movement is simulated (remote/AI characters).
 	 * Updates animation state based on velocity changes and ground contact.
 	 * Triggers landing effects when character touches ground after airtime.
-	 * 
+	 *
 	 * @param OldVelocity			Character velocity from previous frame
 	 * @param IsMovingOnGround		True if character is currently grounded
 	 */
@@ -404,11 +409,11 @@ public:
 
 	/**
 	 * PlayAudioEvent
-	 * 
+	 *
 	 * Plays a gameplay audio event using a GameplayTag identifier.
 	 * Supports volume and pitch modulation for variation (footsteps, impacts, etc.).
 	 * Propagates audio on server for networked play.
-	 * 
+	 *
 	 * @param Value				Gameplay tag identifying the audio event (e.g., "Audio.Footstep.Run")
 	 * @param VolumeMultiplier	Multiplier applied to audio volume (default 1.0, range [0, 2.0])
 	 * @param PitchMultiplier	Multiplier applied to audio pitch (default 1.0, range [0.5, 1.5])
@@ -552,11 +557,11 @@ public:
 
 	// ===== TRAVERSAL STATE (REPLICATED) =====
 
-	/** 
+	/**
 	 * Result of most recent traversal check; replicated to clients using OnRep_TraversalResult.
 	 * Contains montage selection, motion warp targets, and traversal metadata.
-	 * 
-* TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
+	 *
+	 * TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
 	 *   DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, TraversalResult, COND_SimulatedOnly);
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Traversal", ReplicatedUsing = "OnRep_TraversalResult")
@@ -571,8 +576,8 @@ public:
 	/**
 	 * Replicated input state containing movement, look, and ability activation flags.
 	 * Synchronized across network to enable server-side input validation.
-	 * 
-* TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
+	 *
+	 * TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
 	 *   DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, CharacterInputState, COND_SkipOwner);
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Input", Replicated)
@@ -607,4 +612,41 @@ public:
 	/** Master toggle to activate/deactivate all Advanced Traversal System mechanics */
 	ADV_PROP(EditDefaultsOnly, Category = "Traversal | ATS")
 	bool bATSActivate;
+};
+
+// ------------------------------------------------------------------
+// Optimization subclass (moved out of parent class to satisfy UHT)
+// ------------------------------------------------------------------
+
+/**
+ * A stripped‑down C++ subclass that implements the most performance
+ * sensitive portions of the movement system in native code.  Blueprints
+ * that were originally based on the CBP_AdventureCharacter CMC variant can
+ * simply reparent to this class without changing any graphs.
+ *
+ * The goal is non‑destructive optimisation: existing blueprints continue to
+ * function exactly the same, but expensive Tick/PreCMC logic is handled in
+ * C++ and results are cached so the Blueprint VM has fewer nodes to execute.
+ */
+UCLASS(Blueprintable)
+class ADVENTURE_API ACBP_AdventureCharacter_CMC : public ACBP_AdventureCharacter
+{
+	GENERATED_BODY()
+
+public:
+	// override Tick to coalesce PreCMC updates and avoid multiple Blueprint
+	// calls per frame.
+	virtual void Tick(float DeltaSeconds) override;
+
+protected:
+	// cache for common calculations to avoid recomputation every frame
+	float CachedStrafeSpeedMap = 0.0f;
+	FVector2D CachedMovementInput = FVector2D::ZeroVector;
+
+	// override of PreCMC helpers that operate on cached values
+	virtual void UpdateMovement_PreCMC() override;
+	virtual void UpdateRotation_PreCMC() override;
+
+	// utility used internally by CMC subclass
+	void ComputeCachedMovementValues();
 };

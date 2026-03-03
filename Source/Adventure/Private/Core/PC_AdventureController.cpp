@@ -11,6 +11,7 @@
 
 #include "Engine/LocalPlayer.h" // need full definition for GetSubsystem
 #include "GAS/AdventureGameplayTags.h"
+#include "GAS/AdventureAttributeSet.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputActionValue.h"
 
@@ -33,7 +34,23 @@ void APC_AdventureController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// HUD disabled in rollback baseline
+	// spawn HUD widget if class specified
+	if (HUDWidgetClass)
+	{
+		HUDWidget = CreateWidget<UAdventureHUDWidget>(this, HUDWidgetClass);
+		if (HUDWidget)
+		{
+			HUDWidget->AddToViewport();
+		}
+	}
+
+	// bind to attribute changes if we already have ASC cached
+	if (CachedAbilitySystemComponent && HUDWidget)
+	{
+		CachedAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+										UAdventureAttributeSet::GetRitualEnergyAttribute())
+			.AddUObject(this, &APC_AdventureController::OnRitualEnergyChanged);
+	}
 }
 
 void APC_AdventureController::OnPossess(APawn *InPawn)
@@ -48,6 +65,19 @@ void APC_AdventureController::OnPossess(APawn *InPawn)
 		if (IAbilitySystemInterface *AbilityInterface = Cast<IAbilitySystemInterface>(InPawn))
 		{
 			CachedAbilitySystemComponent = AbilityInterface->GetAbilitySystemComponent();
+		}
+
+		// bind attribute delegate if we also have a HUD
+		if (CachedAbilitySystemComponent && HUDWidget)
+		{
+			CachedAbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+											UAdventureAttributeSet::GetRitualEnergyAttribute())
+				.AddUObject(this, &APC_AdventureController::OnRitualEnergyChanged);
+
+			// initialize display
+			float Current = CachedAbilitySystemComponent->GetNumericAttribute(
+				UAdventureAttributeSet::GetRitualEnergyAttribute());
+			HUDWidget->SetRitualEnergy(Current);
 		}
 
 		// Setup Enhanced Input System
@@ -157,16 +187,15 @@ void APC_AdventureController::OnDodgeInput(const FInputActionValue &Value)
 
 void APC_AdventureController::OnAbilityInput_Light(const FInputActionValue &Value)
 {
-	// TODO (GAS-001): Activate light attack ability (GA_LightAttack)
 	if (CachedAbilitySystemComponent)
 	{
-		// TODO (GAS-001): Activate ability by tag
+		TryActivateAbilityByTag(AdventureGameplayTags::Ability_Attack_Light);
 	}
 }
 
 void APC_AdventureController::OnAbilityInput_Heavy(const FInputActionValue &Value)
 {
-	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Traversal);
+	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Attack_Heavy);
 }
 
 void APC_AdventureController::OnInteractInput(const FInputActionValue &Value)
@@ -194,6 +223,13 @@ void APC_AdventureController::OnPauseInput(const FInputActionValue &Value)
 	SetGamePaused(!bGamePaused);
 }
 
+void APC_AdventureController::OnRitualEnergyChanged(const FOnAttributeChangeData &Data)
+{
+	if (HUDWidget)
+	{
+		HUDWidget->SetRitualEnergy(Data.NewValue);
+	}
+}
 // fallback handlers for legacy axis bindings
 void APC_AdventureController::OnMoveAxis(float Value)
 {

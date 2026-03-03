@@ -10,8 +10,8 @@
 
 #define ADVENTURE_ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
 	GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
-	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
-	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+	GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName)               \
+	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName)               \
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 UCLASS()
@@ -46,25 +46,54 @@ public:
 	FGameplayAttributeData MaxRitualEnergy;
 	ADVENTURE_ATTRIBUTE_ACCESSORS(UAdventureAttributeSet, MaxRitualEnergy)
 
-	UFUNCTION()
-	void OnRep_Health(const FGameplayAttributeData& OldValue) const;
+	// Extra mechanics for BZRKR-style gameplay
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Rage, Category = "Attributes")
+	FGameplayAttributeData Rage;
+	ADVENTURE_ATTRIBUTE_ACCESSORS(UAdventureAttributeSet, Rage)
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxRage, Category = "Attributes")
+	FGameplayAttributeData MaxRage;
+	ADVENTURE_ATTRIBUTE_ACCESSORS(UAdventureAttributeSet, MaxRage)
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Shield, Category = "Attributes")
+	FGameplayAttributeData Shield;
+	ADVENTURE_ATTRIBUTE_ACCESSORS(UAdventureAttributeSet, Shield)
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MaxShield, Category = "Attributes")
+	FGameplayAttributeData MaxShield;
+	ADVENTURE_ATTRIBUTE_ACCESSORS(UAdventureAttributeSet, MaxShield)
 
 	UFUNCTION()
-	void OnRep_MaxHealth(const FGameplayAttributeData& OldValue) const;
+	void OnRep_Health(const FGameplayAttributeData &OldValue) const;
 
 	UFUNCTION()
-	void OnRep_Stamina(const FGameplayAttributeData& OldValue) const;
+	void OnRep_MaxHealth(const FGameplayAttributeData &OldValue) const;
 
 	UFUNCTION()
-	void OnRep_MaxStamina(const FGameplayAttributeData& OldValue) const;
+	void OnRep_Stamina(const FGameplayAttributeData &OldValue) const;
 
 	UFUNCTION()
-	void OnRep_RitualEnergy(const FGameplayAttributeData& OldValue) const;
+	void OnRep_MaxStamina(const FGameplayAttributeData &OldValue) const;
 
 	UFUNCTION()
-	void OnRep_MaxRitualEnergy(const FGameplayAttributeData& OldValue) const;
+	void OnRep_RitualEnergy(const FGameplayAttributeData &OldValue) const;
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	UFUNCTION()
+	void OnRep_MaxRitualEnergy(const FGameplayAttributeData &OldValue) const;
+
+	UFUNCTION()
+	void OnRep_Rage(const FGameplayAttributeData &OldValue) const;
+
+	UFUNCTION()
+	void OnRep_MaxRage(const FGameplayAttributeData &OldValue) const;
+
+	UFUNCTION()
+	void OnRep_Shield(const FGameplayAttributeData &OldValue) const;
+
+	UFUNCTION()
+	void OnRep_MaxShield(const FGameplayAttributeData &OldValue) const;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 };
 
 #undef ADVENTURE_ATTRIBUTE_ACCESSORS

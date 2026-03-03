@@ -41,6 +41,7 @@ This implementation provides the C++ foundation for integrating GAS into both ch
 - PlayerState-owned ASC (multiplayer-friendly)
 - Character variants call InitializeAbilitySystem on possession and replication
 - Ability activation is tag-based from PlayerController
+- Core attack abilities (light/heavy) now defined and grant RitualEnergy on activation
 - Default attribute values applied via GE on spawn
 
 ## How to Use
@@ -58,9 +59,10 @@ This implementation provides the C++ foundation for integrating GAS into both ch
 
 ## Next Steps
 
-1. Implement GA_LightAttack/GA_HeavyAttack and RitualEnergy gain effects
-2. Bind HUD to UAdventureAttributeSet attributes
-3. Create cost/cooldown GameplayEffects for movement/combat abilities
+1. (Completed) Implemented `GA_LightAttack` and `GA_HeavyAttack` abilities with tag definitions and RE gain
+2. Grant these attack abilities by default on character types
+3. Bind HUD to UAdventureAttributeSet attributes
+4. Create cost/cooldown GameplayEffects for movement/combat abilities
 
 ## Compatibility
 

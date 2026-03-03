@@ -8,6 +8,8 @@
 #include "InputActionValue.h"
 #include "GameplayTagContainer.h"
 #include "Core/AdventureTypes.h"
+#include "AbilitySystemComponent.h"
+#include "GameplayEffectTypes.h"
 #include "PC_AdventureController.generated.h"
 
 class ACBP_AdventureCharacter;
@@ -15,11 +17,13 @@ class ACBP_AdventureCharacter_Mover;
 class UInputMappingContext;
 class UInputAction;
 class UUserWidget;
+class UAdventureHUDWidget;
+#include "Blueprint/UserWidget.h"
 class UAbilitySystemComponent;
 
 /**
  * APC_AdventureController
- * 
+ *
  * Core player controller for the Adventure prototype (Phase 1+).
  * Manages:
  *   - Player input routing and camera modes (TopDown/ThirdPerson/FirstPerson)
@@ -29,27 +33,27 @@ class UAbilitySystemComponent;
  *   - GAS (Gameplay Ability System) ability activation via input
  *   - Camera state synchronization and transitions
  *   - Pause/unpause and menu navigation
- * 
+ *
  * Integration Points:
  *   - Works with ACBP_AdventureCharacter for movement and traversal
  *   - Binds input actions to character methods (movement, combat, traversal)
  *   - Manages HUD widget (WB_HUD) display and updates
  *   - Interfaces with GAS AbilitySystemComponent for ability activation
  *   - Syncs camera modes via mouse wheel or input actions
- * 
+ *
  * Input Flow:
  *   1. Player input received via Enhanced Input System
  *   2. Input actions routed to character or ability system
  *   3. Character processes movement/traversal logic
  *   4. Results updated in HUD widget via GAS attribute callbacks
  *   5. Camera follows character with style-specific offset/distance
- * 
+ *
  * Usage:
  *   1. Set APC_AdventureController as PlayerControllerClass in GameMode defaults
  *   2. Configure input mapping context and actions in Blueprint or code
  *   3. HUD widget will auto-spawn on BeginPlay
  *   4. Input setup occurs during Pawn possession (SetupInput call)
- * 
+ *
  * @see ACBP_AdventureCharacter for possession target
  * @see UInputMappingContext, UInputAction for Enhanced Input System
  * @see WB_HUD for main gameplay interface
@@ -66,7 +70,7 @@ public:
 
 	/**
 	 * BeginPlay
-	 * 
+	 *
 	 * Called when player controller enters gameplay.
 	 * Spawns HUD widget and prepares input system.
 	 */
@@ -74,17 +78,17 @@ public:
 
 	/**
 	 * OnPossess
-	 * 
+	 *
 	 * Called when this controller possesses a pawn.
 	 * Sets up input mapping, character components, and camera.
-	 * 
+	 *
 	 * @param InPawn	The pawn being possessed (typically ACBP_AdventureCharacter)
 	 */
-	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnPossess(APawn *InPawn) override;
 
 	/**
 	 * OnUnPossess
-	 * 
+	 *
 	 * Called when this controller loses possession of its pawn.
 	 * Cleans up input mapping and cached references.
 	 */
@@ -94,7 +98,7 @@ public:
 
 	/**
 	 * SetupInputComponent
-	 * 
+	 *
 	 * Sets up input component with Enhanced Input System callbacks.
 	 * Binds movement, look, ability, and menu actions to functions.
 	 * Called automatically by engine during initialization.
@@ -103,7 +107,7 @@ public:
 
 	/**
 	 * SetupEnhancedInput
-	 * 
+	 *
 	 * Initializes Enhanced Input System with context and action mappings.
 	 * Adds the input mapping context to the local player's input subsystem.
 	 * Called from OnPossess to establish input routing.
@@ -113,7 +117,7 @@ public:
 
 	/**
 	 * TeardownEnhancedInput
-	 * 
+	 *
 	 * Removes input mapping context when controller loses possession.
 	 * Cleans up input subsystem state.
 	 */
@@ -128,102 +132,102 @@ public:
 
 	/**
 	 * OnMoveInput
-	 * 
+	 *
 	 * Callback for movement input action (WASD or analog stick).
 	 * Passes input value to possessed character's movement system.
-	 * 
+	 *
 	 * @param Value		Input action value (FInputActionValue)
 	 */
 	UFUNCTION()
-	void OnMoveInput(const FInputActionValue& Value);
+	void OnMoveInput(const FInputActionValue &Value);
 
 	/**
 	 * OnLookInput
-	 * 
+	 *
 	 * Callback for look input action (mouse movement or right analog stick).
 	 * Updates camera rotation based on current camera style.
-	 * 
+	 *
 	 * @param Value		Input action value (contains delta X/Y in pixels or analog units)
 	 */
 	UFUNCTION()
-	void OnLookInput(const FInputActionValue& Value);
+	void OnLookInput(const FInputActionValue &Value);
 
 	/**
 	 * OnSprintInput
-	 * 
+	 *
 	 * Callback for sprint input (typically Shift key or RS pressure).
 	 * Initiates sprint state on possessed character if conditions met.
-	 * 
+	 *
 	 * @param Value		Input action value (dummy; action is binary)
 	 */
 	UFUNCTION()
-	void OnSprintInput(const FInputActionValue& Value);
+	void OnSprintInput(const FInputActionValue &Value);
 
 	/**
 	 * OnDodgeInput
-	 * 
+	 *
 	 * Callback for dodge/dash input (typically Space or jump key).
 	 * Triggers dodge/traversal action on character.
-	 * 
+	 *
 	 * @param Value		Input action value (dummy; action is binary or analog for prediction)
 	 */
 	UFUNCTION()
-	void OnDodgeInput(const FInputActionValue& Value);
+	void OnDodgeInput(const FInputActionValue &Value);
 
 	/**
 	 * OnAbilityInput_Light
-	 * 
+	 *
 	 * Callback for light attack ability input (typically LMB or gamepad trigger).
 	 * Activates GA_LightAttack on character's GAS ability system.
-	 * 
+	 *
 	 * @param Value		Input action value (carry over for input predictin)
 	 */
 	UFUNCTION()
-	void OnAbilityInput_Light(const FInputActionValue& Value);
+	void OnAbilityInput_Light(const FInputActionValue &Value);
 
 	/**
 	 * OnAbilityInput_Heavy
-	 * 
+	 *
 	 * Callback for heavy attack ability input (typically RMB or gamepad button).
 	 * Activates GA_HeavyAttack on character's GAS ability system.
-	 * 
+	 *
 	 * @param Value		Input action value
 	 */
 	UFUNCTION()
-	void OnAbilityInput_Heavy(const FInputActionValue& Value);
+	void OnAbilityInput_Heavy(const FInputActionValue &Value);
 
 	/**
 	 * OnInteractInput
-	 * 
+	 *
 	 * Callback for interact input (typically E key).
 	 * Triggers interaction on objects within range or activates triggered traversal.
-	 * 
+	 *
 	 * @param Value		Input action value (dummy; action is binary)
 	 */
 	UFUNCTION()
-	void OnInteractInput(const FInputActionValue& Value);
+	void OnInteractInput(const FInputActionValue &Value);
 
 	/**
 	 * OnCameraToggleInput
-	 * 
+	 *
 	 * Callback for camera mode toggle input (typically Mouse Wheel or dedicated button).
 	 * Cycles through camera styles: TopDown → ThirdPerson → FirstPerson → TopDown.
-	 * 
+	 *
 	 * @param Value		Input action value (contains scroll delta)
 	 */
 	UFUNCTION()
-	void OnCameraToggleInput(const FInputActionValue& Value);
+	void OnCameraToggleInput(const FInputActionValue &Value);
 
 	/**
 	 * OnPauseInput
-	 * 
+	 *
 	 * Callback for pause menu input (typically ESC).
 	 * Opens pause menu HUD and pauses gameplay.
-	 * 
+	 *
 	 * @param Value		Input action value (dummy; action is binary)
 	 */
 	UFUNCTION()
-	void OnPauseInput(const FInputActionValue& Value);
+	void OnPauseInput(const FInputActionValue &Value);
 
 	// legacy axis callbacks (non-Enhanced Input)
 	void OnMoveAxis(float Value);
@@ -232,39 +236,38 @@ public:
 	// ===== HUD & UI MANAGEMENT =====
 	// (removed for baseline rollback)
 
-
 	// ===== CHARACTER ACCESS =====
 
 	/**
 	 * GetAdventureCharacter
-	 * 
+	 *
 	 * Returns the possessed pawn as ACBP_AdventureCharacter.
 	 * Provides convenient typed access throughout controller lifetime.
-	 * 
+	 *
 	 * @return		The adventure character, or nullptr if not possessing one
 	 */
 	UFUNCTION(BlueprintPure, Category = "Game")
-	ACBP_AdventureCharacter* GetAdventureCharacter() const;
+	ACBP_AdventureCharacter *GetAdventureCharacter() const;
 
 	/**
 	 * GetAdventureCharacterAbilitySystem
-	 * 
+	 *
 	 * Returns the possessed character's GAS ability system component.
 	 * Used to activate abilities or query ability state.
-	 * 
+	 *
 	 * @return		The character's AbilitySystemComponent, or nullptr if not available
 	 */
 	UFUNCTION(BlueprintPure, Category = "Game|GAS")
-	UAbilitySystemComponent* GetAdventureCharacterAbilitySystem() const;
+	UAbilitySystemComponent *GetAdventureCharacterAbilitySystem() const;
 
 	// ===== GAME STATE QUERIES =====
 
 	/**
 	 * IsGamePaused
-	 * 
+	 *
 	 * Queries current pause state.
 	 * Used to block input and display appropriate UI.
-	 * 
+	 *
 	 * @return		True if game is paused, false if running
 	 */
 	UFUNCTION(BlueprintPure, Category = "Game")
@@ -272,10 +275,10 @@ public:
 
 	/**
 	 * SetGamePaused
-	 * 
+	 *
 	 * Toggles game pause state.
 	 * Synchronizes with game mode and HUD.
-	 * 
+	 *
 	 * @param bPause	True to pause, false to resume
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Game")
@@ -285,7 +288,7 @@ public:
 
 	/**
 	 * CycleCamera
-	 * 
+	 *
 	 * Cycles to the next camera mode (TopDown → ThirdPerson → FirstPerson → TopDown).
 	 * Smoothly transitions camera position and FOV.
 	 * Called by OnCameraToggleInput.
@@ -295,9 +298,9 @@ public:
 
 	/**
 	 * GetCurrentCamera Style
-	 * 
+	 *
 	 * Returns the currently active camera style.
-	 * 
+	 *
 	 * @return		Camera style enum (TopDown, ThirdPerson, or FirstPerson)
 	 */
 	UFUNCTION(BlueprintPure, Category = "Camera")
@@ -353,7 +356,9 @@ public:
 
 	/** Cached reference to spawned HUD widget instance */
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
-	TObjectPtr<UUserWidget> HUDWidget;
+	TObjectPtr<UAdventureHUDWidget> HUDWidget;
+
+	/** Called when Ritual Energy attribute changes (server+client). */
 
 	// ===== INPUT SENSITIVITY & SETTINGS =====
 
@@ -379,13 +384,16 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Game")
 	TObjectPtr<ACBP_AdventureCharacter> CachedAdventureCharacter;
 
+	// attribute change handlers
+	void OnRitualEnergyChanged(const FOnAttributeChangeData &Data);
+
 	/** Cached reference to possessed mover-based character */
 	UPROPERTY(BlueprintReadOnly, Category = "Game")
 	TObjectPtr<ACBP_AdventureCharacter_Mover> CachedAdventureMover;
 
 	/** Cached reference to character's GAS ability system component */
 	UPROPERTY(BlueprintReadOnly, Category = "Game")
-	UAbilitySystemComponent* CachedAbilitySystemComponent;
+	UAbilitySystemComponent *CachedAbilitySystemComponent;
 
 	/** Current camera style index (0 = TopDown, 1 = ThirdPerson, 2 = FirstPerson) */
 	UPROPERTY(BlueprintReadOnly, Category = "Camera")
