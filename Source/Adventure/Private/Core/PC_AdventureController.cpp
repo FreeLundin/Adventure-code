@@ -287,6 +287,8 @@ void APC_AdventureController::CycleCamera()
 	// Update character's camera style
 	E_CameraStyle NewCameraStyle = static_cast<E_CameraStyle>(CurrentCameraStyleIndex);
 	CachedAdventureCharacter->CameraStyle = NewCameraStyle;
+	// apply new settings immediately
+	CachedAdventureCharacter->ApplyCameraStyle();
 
 	// Log the camera change
 	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") : (NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person")

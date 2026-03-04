@@ -441,8 +441,63 @@ double ACBP_AdventureCharacter::CalculateMaxCrouchSpeed(float StrafeSpeedMap)
 
 void ACBP_AdventureCharacter::SetupCamera(APlayerController *PlayerController)
 {
-	// TODO: Initialize camera components and attach to character
-	// Set initial camera mode based on CameraStyle
+	// initialize spring arm / camera if not already
+	if (!SpringArm)
+	{
+		SpringArm = NewObject<USpringArmComponent>(this, TEXT("SpringArm"));
+		SpringArm->SetupAttachment(RootComponent);
+		SpringArm->bUsePawnControlRotation = true;
+		SpringArm->RegisterComponent();
+	}
+	if (!GameplayCamera)
+	{
+		// GameplayCamera is abstract; for simplicity use a regular CameraComponent
+		UCameraComponent *Cam = NewObject<UCameraComponent>(this, TEXT("GameplayCamera"));
+		Cam->SetupAttachment(SpringArm);
+		Cam->RegisterComponent();
+		GameplayCamera = Cam;
+	}
+
+	// apply current style settings
+	ApplyCameraStyle();
+}
+
+void ACBP_AdventureCharacter::ApplyCameraStyle()
+{
+	if (!SpringArm)
+	{
+		return;
+	}
+
+	switch (CameraStyle)
+	{
+	case E_CameraStyle::TopDown:
+		SpringArm->TargetArmLength = 2000.f;
+		SpringArm->SetRelativeRotation(FRotator(-90.f, 0.f, 0.f));
+		if (UCameraComponent *Cam = Cast<UCameraComponent>(GameplayCamera))
+		{
+			Cam->FieldOfView = 90.f;
+		}
+		break;
+	case E_CameraStyle::ThirdPerson:
+		SpringArm->TargetArmLength = 300.f;
+		SpringArm->SetRelativeRotation(FRotator(-10.f, 0.f, 0.f));
+		if (UCameraComponent *Cam = Cast<UCameraComponent>(GameplayCamera))
+		{
+			Cam->FieldOfView = 90.f;
+		}
+		break;
+	case E_CameraStyle::FirstPerson:
+		SpringArm->TargetArmLength = 0.f;
+		SpringArm->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+		if (UCameraComponent *Cam = Cast<UCameraComponent>(GameplayCamera))
+		{
+			Cam->FieldOfView = 100.f;
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 FS_TraversalCheckInputs ACBP_AdventureCharacter::GetTraversalCheckInputs(FVector Direction)

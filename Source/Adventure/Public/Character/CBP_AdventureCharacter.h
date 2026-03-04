@@ -515,6 +515,14 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Camera")
 	TEnumAsByte<E_CameraStyle> CameraStyle;
 
+	/**
+	 * Apply current CameraStyle to the camera components.
+	 * Adjusts spring arm length, rotation and camera FOV offsets.
+	 * Called from controller when style changes or on setup.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	void ApplyCameraStyle();
+
 	/** Analog stick deflection threshold (0-1) above which character transitions from walk to run */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Input")
 	float AnalogWalk_RunThreshold;
