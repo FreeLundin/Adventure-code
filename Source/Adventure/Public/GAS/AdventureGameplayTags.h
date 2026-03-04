@@ -21,4 +21,3 @@ namespace AdventureGameplayTags
 	ADVENTURE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Attack_Block);
 	ADVENTURE_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_Attack_Parry);
 }
-

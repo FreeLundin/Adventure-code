@@ -4,9 +4,9 @@
 This index points to the core documentation and runbooks. Use it to
 quickly locate what you need.
 
-- `README.md` — Simple entry and quick start.
+- `README.md` — **Primary Game Design Document** (see main repo README for the current comprehensive design).
 - `PROJECT_STATUS.md` — Current plan, milestones and concise progress.
-- `Adventure_GDD.md` — Game Design Document (detailed design).
+- `Adventure_GDD.md` — *ARCHIVED* original design document (superseded by README).
 - `Adventure_Implementation_Plan.md` — Implementation breakdown and task templates.
 - `Product_Backlog.md` — Backlog organized by Epic (source of truth for issues).
 - `Product_Roadmap.md` — Roadmap and milestone timeline.

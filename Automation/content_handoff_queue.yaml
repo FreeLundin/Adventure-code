@@ -1,0 +1,39 @@
+handoff_queue:
+  blueprint:
+    allowed:
+      - create_asset
+      - add_components
+      - set_properties
+      - compile
+      - save_package
+    forbidden:
+      - raw_graph_node_wiring
+    execution_mode: editor_python_or_mcp
+
+  niagara:
+    allowed:
+      - create_system
+      - assign_emitters
+      - set_user_parameters
+      - set_system_properties
+      - save_package
+    forbidden:
+      - module_stack_edit
+      - script_graph_edit
+    execution_mode: editor_python
+
+  metasound:
+    allowed:
+      - create_asset
+      - set_parameters
+      - assign_presets
+      - save_package
+    forbidden:
+      - complex_graph_rewire
+    execution_mode: editor_python
+
+  escalation:
+    when_forbidden:
+      - queue_for_manual_or_mcp
+    output_folder: Automation/handoff_jobs/
+    job_format: yaml

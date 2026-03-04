@@ -1,3 +1,8 @@
+> **ARCHIVED DOCUMENT**  
+> This file contains the original Game Design Document prior to 2026‑03‑03.  
+> The authoritative GDD has been merged into `README.md` (repository root).  
+> Refer to the README for the current design and roadmap.
+
 # Adventure
 Game Design Document
 

@@ -101,14 +101,14 @@ public:
 	 * Override traversal active check for automated tests. When true, all
 	 * combat abilities will be blocked regardless of actual traversal state.
 	 */
-	UPROPERTY(BlueprintReadOnly, Category="Testing")
+	UPROPERTY(BlueprintReadOnly, Category = "Testing")
 	bool bTraversalOverride = false;
 
 	/**
 	 * Enable/disable the traversal override. Provided so unit tests can
 	 * exercise TryActivateAbilityByTag without constructing a full state tree.
 	 */
-	UFUNCTION(BlueprintCallable, Category="Testing")
+	UFUNCTION(BlueprintCallable, Category = "Testing")
 	void SetTraversalOverride(bool b) { bTraversalOverride = b; }
 
 	// --- debug statistics (used by automated tests) -------------------------
@@ -116,14 +116,14 @@ public:
 	 * Number of times TryActivateAbilityByTag successfully forwarded to the
 	 * ability system component. 0 indicates the request was blocked.
 	 */
-	UPROPERTY(VisibleAnywhere, Category="Debug")
+	UPROPERTY(VisibleAnywhere, Category = "Debug")
 	int32 ActivationAttempts = 0;
 
 	/**
 	 * Last gameplay tag that was attempted to activate. Only valid if
 	 * ActivationAttempts > 0.
 	 */
-	UPROPERTY(VisibleAnywhere, Category="Debug")
+	UPROPERTY(VisibleAnywhere, Category = "Debug")
 	FGameplayTag LastAttemptedTag;
 
 	/**

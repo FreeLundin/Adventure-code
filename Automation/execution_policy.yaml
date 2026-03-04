@@ -1,0 +1,41 @@
+execution:
+  unattended: true
+  mode: supervised_autonomy
+  require_green_build: true
+  require_tests: true
+  max_retries: 2
+
+permissions:
+  write:
+    - Source/**
+    - Config/**
+    - Documentation/**
+    - Automation/**
+  read_only:
+    - Plugins/**
+    - Engine/**
+    - Content/**
+  forbidden:
+    - Plugins/ATS/**
+    - Plugins/ThirdParty/**
+    - Engine/**
+
+architecture_enforcement:
+  traversal:
+    owner: ATS
+    rule: "No other system may move the player"
+  vfx:
+    owner: Niagara
+    rule: "No Cascade / legacy particles"
+  audio:
+    owner: MetaSounds
+    rule: "No SoundCues for gameplay audio"
+  state:
+    owner: StateTree
+    rule: "StateTree orchestrates only; no damage or movement execution"
+
+failure_handling:
+  on_compile_fail: rollback
+  on_test_fail: rollback
+  on_arch_violation: hard_stop
+  on_protected_path_violation: hard_stop

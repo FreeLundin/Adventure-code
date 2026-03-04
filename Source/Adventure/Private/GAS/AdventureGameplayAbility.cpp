@@ -106,8 +106,6 @@ UGA_AdventureParry::UGA_AdventureParry()
 	SetAssetTags(Tags);
 }
 
-
-
 void UGA_AdventureTraversal::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo *ActorInfo,

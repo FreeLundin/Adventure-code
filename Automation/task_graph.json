@@ -1,0 +1,36 @@
+{
+  "project": "SVGLND",
+  "mode": "supervised_autonomy",
+  "defaults": {
+    "allowed_paths": ["Source/**", "Config/**", "Documentation/**", "Automation/**"],
+    "protected_paths": ["Plugins/ATS/**", "Plugins/ThirdParty/**", "Engine/**"],
+    "build": true,
+    "rollback_on_fail": true
+  },
+  "tasks": [
+    {
+      "id": "M0-T1",
+      "title": "Bootstrap automation + guards",
+      "type": "ops",
+      "depends_on": [],
+      "tests": ["SVGLND.Arch.Guards.Basic"],
+      "commit": { "on_success": true, "message": "M0-T1: Bootstrap unattended scaffolding" }
+    },
+    {
+      "id": "M1-T1",
+      "title": "Traversal abilities (GA_Climb/Mantle/Vault) with tags",
+      "type": "code",
+      "depends_on": ["M0-T1"],
+      "tests": ["SVGLND.Traversal.NoRegression", "SVGLND.Combat.BlockedDuringTraversal"],
+      "commit": { "on_success": true, "message": "M1-T1: Traversal abilities + tag contract" }
+    },
+    {
+      "id": "M2-T1",
+      "title": "Combat adapter + coordinator (no movement ownership)",
+      "type": "code",
+      "depends_on": ["M1-T1"],
+      "tests": ["SVGLND.Combat.ResumeAfterTraversal"],
+      "commit": { "on_success": true, "message": "M2-T1: Combat adapter + coordinator" }
+    }
+  ]
+}
