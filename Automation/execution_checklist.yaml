@@ -1,0 +1,210 @@
+project:
+  code: SVGLND
+  mode: supervised_autonomy
+  guardrails:
+    ats_protected: true
+    no_unattended_graph_edits:
+      blueprint: true
+      niagara: true
+      metasound: true
+    allowed_paths:
+      - Source/**
+      - Automation/**
+      - Documentation/**
+      - Config/**
+    forbidden_paths:
+      - Plugins/ATS/**
+      - Plugins/ThirdParty/**
+      - Engine/**
+
+phases:
+
+  - id: PHASE_3_AUTOMATION_LOCK
+    name: "Lock motion-feature pipeline as pre-build gate"
+    status: in_progress
+    depends_on: []
+    steps:
+      - id: STEP_3_1
+        action: verify
+        target: AutomationTest
+        name: SVGLND.MotionFeatures.PerFrame
+        criteria:
+          - writes_csv: Saved/Automation/Features/*.csv
+          - read_only_actor_sampling: true
+          - no_movement_commands: true
+
+      - id: STEP_3_2
+        action: integrate
+        target: CI
+        name: PreBuildFeatureGate
+        script: Automation/pre_build_features.ps1
+        criteria:
+          - runs_before_build: true
+          - fails_build_on_error: true
+
+      - id: STEP_3_3
+        action: verify
+        target: Artifact
+        name: FeatureArchive
+        criteria:
+          - csv_present: true
+          - manifest_updated: Automation/audits/manifest.json
+
+    exit_criteria:
+      - ci_green: true
+      - feature_csv_required_for_build: true
+
+  - id: PHASE_TD_005
+    name: "Close TD-005 — CI pipeline governance"
+    status: in_progress
+    depends_on:
+      - PHASE_3_AUTOMATION_LOCK
+    steps:
+      - id: STEP_5_1
+        action: verify
+        target: CI
+        name: FeatureExtractionPreBuild
+        criteria:
+          - build_fails_without_features: true
+
+      - id: STEP_5_2
+        action: verify
+        target: CI
+        name: PoseSearchValidation
+        criteria:
+          - runs_pre_build: true
+          - fails_on_missing_assets: true
+
+      - id: STEP_5_3
+        action: verify
+        target: CI
+        name: FeatureDriftDetection
+        criteria:
+          - thresholds_enforced: true
+          - fails_on_regression: true
+
+    exit_criteria:
+      - td_005_status: closed
+
+  - id: PHASE_TD_008
+    name: "Execute TD-008 sub-tasks"
+    status: in_progress
+    depends_on:
+      - PHASE_TD_005
+    sub_tasks:
+
+      - id: TD_008_C
+        name: "Motion-matching sample acquisition"
+        owner: human
+        type: content
+        steps:
+          - action: create_folders
+            path: Content/Animation/MotionMatching/
+          - action: import_clips
+            minimum_set:
+              - Walk_Fwd
+              - Run_Fwd
+              - Jump_Short
+              - Vault_Low
+          - action: document
+            file: Content/Animation/MotionMatching/Meta/README_ClipSources.md
+        exit_criteria:
+          - posesearch_builds: true
+
+      - id: TD_008_D
+        name: "Motion context interfaces (character-side)"
+        owner: IDE
+        type: code
+        steps:
+          - action: implement_interface
+            name: ISVGLNDMotionContextProvider
+          - action: expose_data
+            sources:
+              - GAS_Tags
+              - InputIntent
+              - StateTree
+          - action: compile
+        exit_criteria:
+          - ats_untouched: true
+          - character_compiles: true
+
+      - id: TD_008_E
+        name: "Audit + trend reporting"
+        owner: CI
+        type: automation
+        steps:
+          - action: aggregate
+            source: Automation/audits/*.json
+          - action: generate_reports
+            outputs:
+              - Automation/reports/weekly_audit_*.md
+              - Automation/reports/burndown.md
+        exit_criteria:
+          - weekly_reports_generated: true
+
+    exit_criteria:
+      - td_008_status: closed
+
+  - id: PHASE_NAMING_TRANSITION
+    name: "SVGLND naming enforcement + guided refactor"
+    status: in_progress
+    depends_on:
+      - PHASE_TD_008
+    steps:
+      - id: STEP_N_1
+        action: create_branch
+        name: staging/naming-migration
+
+      - id: STEP_N_2
+        action: run_script
+        script: Automation/refactor_adventure_to_svglnd.py
+        mode: dry_run
+        output: rename_report.txt
+
+      - id: STEP_N_3
+        action: review
+        target: rename_report.txt
+        decision:
+          - rename_now
+          - alias_temporarily
+
+      - id: STEP_N_4
+        action: run_script
+        script: Automation/refactor_adventure_to_svglnd.py
+        mode: apply
+        branch: staging/naming-migration
+
+      - id: STEP_N_5
+        action: add_smoke_tests
+        tests:
+          - SVGLND.Alias.Basic
+
+      - id: STEP_N_6
+        action: merge
+        source: staging/naming-migration
+        target: main
+        conditions:
+          - ci_green: true
+          - smoke_tests_pass: true
+
+    exit_criteria:
+      - svglnd_prefix_enforced: true
+      - legacy_aliases_present: true
+
+  - id: PHASE_GOVERNANCE
+    name: "Operationalize audits and backlog feedback"
+    status: in_progress
+    depends_on:
+      - PHASE_NAMING_TRANSITION
+    steps:
+      - action: schedule
+        job: weekly_audit_summary
+        cadence: weekly
+      - action: review
+        input: Automation/reports/weekly_audit_*.md
+      - action: create_backlog_items
+        trigger:
+          - recurring_guard_failures
+          - feature_drift_trends
+    exit_criteria:
+      - audits_drive_backlog: true
