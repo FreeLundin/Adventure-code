@@ -70,5 +70,5 @@ protected:
 UCLASS()
 class ADVENTURE_API ASVGLNDPlayerState : public AAdventurePlayerState
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 };

@@ -20,7 +20,7 @@ for f in diff:
             BAD.append(f"{f}: {m}")
 
 if BAD:
-    print("❌ SVGLND naming violation:")
+    print("SVGLND naming violation:")
     for b in BAD:
         print(" -", b)
     sys.exit(1)

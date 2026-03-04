@@ -4,9 +4,9 @@
 #include "GameFramework/Pawn.h"
 #include "AdventureMoverPawnBase.generated.h"
 
-class UMoverComponent;          // Mover plugin (Experimental)
-class UStateTreeComponent;      // StateTree
-class UAbilitySystemComponent;  // GAS (optional hook)
+class UMoverComponent;         // Mover plugin (Experimental)
+class UStateTreeComponent;     // StateTree
+class UAbilitySystemComponent; // GAS (optional hook)
 class USkeletalMeshComponent;
 
 UCLASS()
@@ -19,23 +19,23 @@ public:
 
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
-    virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+    virtual void SetupPlayerInputComponent(UInputComponent *PlayerInputComponent) override;
 
     // --- Components ---
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Adventure|Components")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Adventure|Components")
     TObjectPtr<USkeletalMeshComponent> Mesh;
 
     // Mover movement brain (Experimental)
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Adventure|Components")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Adventure|Components")
     TObjectPtr<UMoverComponent> Mover;
 
     // StateTree for high-level locomotion / traversal state orchestration
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Adventure|Components")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Adventure|Components")
     TObjectPtr<UStateTreeComponent> StateTree;
 
     // Optional: GAS hook (if you keep ASC on PlayerState, pawn can still query it)
-    UFUNCTION(BlueprintCallable, Category="Adventure|GAS")
-    UAbilitySystemComponent* GetASCFromPlayerState() const;
+    UFUNCTION(BlueprintCallable, Category = "Adventure|GAS")
+    UAbilitySystemComponent *GetASCFromPlayerState() const;
 
 protected:
     // Input handlers (wire to Enhanced Input in BP or C++)

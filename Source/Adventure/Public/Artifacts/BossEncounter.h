@@ -15,9 +15,9 @@ public:
     virtual void BeginPlay() override;
 
     // placeholder for phase management
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Boss")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boss")
     int32 CurrentPhase = 1;
 
-    UFUNCTION(BlueprintCallable, Category="Boss")
+    UFUNCTION(BlueprintCallable, Category = "Boss")
     void AdvancePhase();
 };
