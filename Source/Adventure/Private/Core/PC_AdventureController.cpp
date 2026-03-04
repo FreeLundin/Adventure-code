@@ -180,6 +180,11 @@ void APC_AdventureController::OnSprintInput(const FInputActionValue &Value)
 	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Sprint);
 }
 
+void APC_AdventureController::OnClimbInput(const FInputActionValue &Value)
+{
+	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Climb);
+}
+
 void APC_AdventureController::OnDodgeInput(const FInputActionValue &Value)
 {
 	TryActivateAbilityByTag(AdventureGameplayTags::Ability_Dodge);

@@ -80,6 +80,22 @@ public:
 };
 
 UCLASS()
+class ADVENTURE_API UGA_AdventureClimb : public UAdventureGameplayAbility
+{
+	GENERATED_BODY()
+
+public:
+	UGA_AdventureClimb();
+
+	// invoke climb traversal when activated
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo *ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData *TriggerEventData) override;
+};
+
+UCLASS()
 class ADVENTURE_API UGA_AdventureInteract : public UAdventureGameplayAbility
 {
 	GENERATED_BODY()

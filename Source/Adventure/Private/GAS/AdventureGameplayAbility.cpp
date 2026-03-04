@@ -71,6 +71,13 @@ UGA_AdventureTraversal::UGA_AdventureTraversal()
 	SetAssetTags(Tags);
 }
 
+UGA_AdventureClimb::UGA_AdventureClimb()
+{
+	FGameplayTagContainer Tags;
+	Tags.AddTag(AdventureGameplayTags::Ability_Climb);
+	SetAssetTags(Tags);
+}
+
 void UGA_AdventureTraversal::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo *ActorInfo,
@@ -113,21 +120,7 @@ void UGA_AdventureTraversal::ActivateAbility(
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
 
-UGA_AdventureInteract::UGA_AdventureInteract()
-{
-	FGameplayTagContainer Tags;
-	Tags.AddTag(AdventureGameplayTags::Ability_Interact);
-	SetAssetTags(Tags);
-}
-
-UGA_AdventureLightAttack::UGA_AdventureLightAttack()
-{
-	FGameplayTagContainer Tags;
-	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Light);
-	SetAssetTags(Tags);
-}
-
-void UGA_AdventureLightAttack::ActivateAbility(
+void UGA_AdventureClimb::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo *ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
@@ -135,36 +128,33 @@ void UGA_AdventureLightAttack::ActivateAbility(
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	// grant small ritual energy bonus to self
-	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
+	if (ActorInfo && ActorInfo->AvatarActor.IsValid())
 	{
-		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
-		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 3.0f);
+		if (ACBP_AdventureCharacter_Mover *Mover = Cast<ACBP_AdventureCharacter_Mover>(ActorInfo->AvatarActor.Get()))
+		{
+			Mover->RequestTraversalClimb();
+		}
+		else if (ACBP_AdventureCharacter *Char = Cast<ACBP_AdventureCharacter>(ActorInfo->AvatarActor.Get()))
+		{
+			// legacy fallback uses same generic Traversal query but forces climb type
+			Char->OnTraversalRequestClimb_Implementation();
+		}
 	}
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
-
-UGA_AdventureHeavyAttack::UGA_AdventureHeavyAttack()
-{
-	FGameplayTagContainer Tags;
-	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Heavy);
-	SetAssetTags(Tags);
-}
-
-void UGA_AdventureHeavyAttack::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo *ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData *TriggerEventData)
-{
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
-	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
 	{
-		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
-		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 8.0f);
-	}
+		Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-}
+		if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
+		{
+			FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+			ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 8.0f);
+		}
+
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+	}

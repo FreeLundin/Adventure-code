@@ -164,6 +164,17 @@ public:
 	void OnSprintInput(const FInputActionValue &Value);
 
 	/**
+	 * OnClimbInput
+	 *
+	 * Callback for climb traversal input (e.g. dedicated key/button).
+	 * Attempts to trigger GA_Climb which will request a climb on the character.
+	 *
+	 * @param Value	Input action value (binary)
+	 */
+	UFUNCTION()
+	void OnClimbInput(const FInputActionValue &Value);
+
+	/**
 	 * OnDodgeInput
 	 *
 	 * Callback for dodge/dash input (typically Space or jump key).
