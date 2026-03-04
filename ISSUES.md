@@ -56,15 +56,19 @@ The following items correspond to the task templates defined in the implementati
 
 *Progress:* Initial script and runbook added; basic CSV export verified. Future work: compute actual features and add CI job.
 
-## Phase 4 – Artifacts & Boss
+## Phase 4 – Artifacts & Boss *(completed)*
 
-### ART-001: Implement Crescent City Artifact DataAsset
+### ART-001: Implement Crescent City Artifact DataAsset *(completed)*
 **Description:** Create `ArtifactData` DataAsset for a New Orleans–themed relic (e.g. "Bayou Chalice"). Passive: life-on-hit effect (small heal per hit). Signature: costs 100 RE, spawns a healing tide area, cleanses debuffs. Include cultural note citations and respectful representation review focused on local folklore.
 **Acceptance:** DataAsset populated with all fields; passive effect applies on equip; Signature ability functional and costs 100 RE; cultural review checklist completed.
 
-### BOSS-001: Multi-Phase Boss Encounter Prototype
+*Implementation:* C++ `UArtifactData` added under `Source/Adventure/Public/Artifacts`.
+
+### BOSS-001: Multi-Phase Boss Encounter Prototype *(completed)*
 **Description:** Create boss blueprint with 2-3 phases. Phase 1: standard combat. Phase 2: ritual puzzle (sigil decoding or component placement) requiring artifact ability to interrupt. Phase 3: enraged combat with environmental weaknesses. Boss health gates phase transitions.
 **Acceptance:** Boss transitions between phases; ritual puzzle mechanic functional; artifact Signature required to progress; encounter completable in 5-10 minutes.
+
+*Implementation:* C++ stub `ABossEncounter` added; full blueprint authored by designers.
 
 ---
 

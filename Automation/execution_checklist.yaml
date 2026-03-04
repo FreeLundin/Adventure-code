@@ -95,7 +95,7 @@ phases:
 
       - id: TD_008_C
         name: "Motion-matching sample acquisition"
-        owner: human
+        owner: ide
         type: content
         steps:
           - action: create_folders
@@ -110,6 +110,22 @@ phases:
             file: Content/Animation/MotionMatching/Meta/README_ClipSources.md
         exit_criteria:
           - posesearch_builds: true
+
+  - id: PHASE_4_ARTIFACT_BOSS
+    name: "Artifacts & Boss"
+    status: in_progress
+    depends_on:
+      - PHASE_TD_008
+    steps:
+      - id: STEP_4_1
+        action: create_class
+        name: UArtifactData
+      - id: STEP_4_2
+        action: create_class
+        name: ABossEncounter
+    exit_criteria:
+      - artifact_code_exists: true
+      - boss_code_exists: true
 
       - id: TD_008_D
         name: "Motion context interfaces (character-side)"
