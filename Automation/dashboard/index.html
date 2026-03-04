@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>SVGLND — Unattended Run Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 18px; background:#0f1115; color:#e8e8e8; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    .card { background:#161a22; border:1px solid #2a3242; border-radius:10px; padding:14px; margin:12px 0; }
+    .row { display:flex; gap:12px; flex-wrap: wrap; }
+    .pill { padding:4px 10px; border-radius:999px; font-size:12px; display:inline-block; }
+    .pass { background:#0b3; color:#001; }
+    .fail { background:#d33; }
+    .skip { background:#555; }
+    code { background:#0b0d12; padding:2px 6px; border-radius:6px; }
+    table { width:100%; border-collapse: collapse; margin-top: 10px;}
+    td, th { border-bottom: 1px solid #2a3242; padding: 8px; text-align:left; }
+    a { color:#88c7ff; }
+  </style>
+</head>
+<body>
+  <h1>SVGLND Unattended Run Dashboard</h1>
+  <div id="content"></div>
+  <script>
+    async function loadAudits() {
+      const resp = await fetch('../audits');
+      const listing = await resp.text();
+      const files = listing.match(/href="(.*?)"/g).map(a=>a.replace(/href=\"|\"/g,''));
+      const content = document.getElementById('content');
+      for (const file of files) {
+        if (!file.endsWith('.json')) continue;
+        const data = await fetch(`../audits/${file}`).then(r=>r.json());
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `<div class="row">
+            <div><strong>Run:</strong> ${data.run_id}</div>
+            <div><strong>Time:</strong> ${data.timestamp_utc}</div>
+            <div><strong>Mode:</strong> ${data.mode}</div>
+          </div>`;
+        content.appendChild(card);
+      }
+    }
+    loadAudits();
+  </script>
+</body>
+</html>

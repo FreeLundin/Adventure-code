@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SVGLND Unattended Run Audit",
+  "type": "object",
+  "required": ["project_code", "run_id", "timestamp_utc", "mode", "tasks"],
+  "properties": {
+    "project_code": { "type": "string", "enum": ["SVGLND"] },
+    "run_id": { "type": "string" },
+    "timestamp_utc": { "type": "string" },
+    "mode": { "type": "string", "enum": ["unattended", "supervised_autonomy"] },
+    "git": {
+      "type": "object",
+      "properties": {
+        "branch": { "type": "string" },
+        "commit_before": { "type": "string" },
+        "commit_after": { "type": "string" }
+      }
+    },
+    "guards": {
+      "type": "object",
+      "properties": {
+        "protected_paths_check": { "type": "string", "enum": ["pass", "fail", "skipped"] },
+        "architecture_check": { "type": "string", "enum": ["pass", "fail", "skipped"] },
+        "niagara_preset_enforcement": { "type": "string", "enum": ["pass", "fail", "skipped"] }
+      }
+    },
+    "build": {
+      "type": "object",
+      "properties": {
+        "attempted": { "type": "boolean" },
+        "result": { "type": "string", "enum": ["pass", "fail", "skipped"] },
+        "log_path": { "type": "string" }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "properties": {
+        "attempted": { "type": "boolean" },
+        "result": { "type": "string", "enum": ["pass", "fail", "skipped"] },
+        "ran": { "type": "array", "items": { "type": "string" } },
+        "failed": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "string", "enum": ["success", "failed", "skipped", "blocked"] },
+          "files_changed": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}
