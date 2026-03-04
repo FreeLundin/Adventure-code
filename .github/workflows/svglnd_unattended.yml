@@ -1,0 +1,23 @@
+name: SVGLND Unattended
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Pre-build Motion Features
+        shell: pwsh
+        run: |
+          Automation/pre_build_features.ps1
+
+      # ... existing build steps ...

@@ -1,0 +1,20 @@
+# Azure Pipelines configuration
+
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- powershell: |
+    python Automation/weekly_audit_summary.py
+  displayName: Generate Weekly Audit Summary
+
+schedules:
+- cron: "0 6 * * 1"
+  displayName: Weekly Audit Summary
+  branches:
+    include:
+      - main
+  always: true
