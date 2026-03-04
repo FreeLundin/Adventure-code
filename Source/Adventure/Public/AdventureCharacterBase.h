@@ -12,6 +12,13 @@ class ADVENTURE_API AAdventureCharacterBase : public AAdventureMoverPawnBase
 
 public:
     AAdventureCharacterBase();
+};
+
+UCLASS()
+class ADVENTURE_API ASVGLNDCharacterBase : public AAdventureCharacterBase
+{
+    GENERATED_BODY()
+};
 
     virtual void BeginPlay() override;
 

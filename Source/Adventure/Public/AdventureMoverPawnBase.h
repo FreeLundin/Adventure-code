@@ -50,3 +50,9 @@ private:
     FVector2D MoveInput = FVector2D::ZeroVector;
     FVector2D LookInput = FVector2D::ZeroVector;
 };
+
+UCLASS()
+class ADVENTURE_API ASVGLNDMoverPawnBase : public AAdventureMoverPawnBase
+{
+    GENERATED_BODY()
+};

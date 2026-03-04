@@ -11,3 +11,9 @@ class ADVENTURE_API AAdventureGameMode : public AGameModeBase
 public:
     AAdventureGameMode();
 };
+
+UCLASS()
+class ADVENTURE_API ASVGLNDGameMode : public AAdventureGameMode
+{
+    GENERATED_BODY()
+};

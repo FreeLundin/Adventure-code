@@ -65,3 +65,10 @@ protected:
 	// combat tracking for Ritual Energy decay
 	float TimeSinceCombat = 0.0f;
 };
+
+// backward-compatible alias using new prefix
+UCLASS()
+class ADVENTURE_API ASVGLNDPlayerState : public AAdventurePlayerState
+{
+    GENERATED_BODY()
+};

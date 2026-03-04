@@ -12,3 +12,9 @@ class ADVENTURE_API AAdventurePlayerController : public APlayerController
 public:
     virtual void BeginPlay() override;
 };
+
+UCLASS()
+class ADVENTURE_API ASVGLNDPlayerController : public AAdventurePlayerController
+{
+    GENERATED_BODY()
+};
