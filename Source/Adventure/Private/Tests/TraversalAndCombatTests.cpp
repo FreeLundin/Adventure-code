@@ -31,3 +31,19 @@ bool FCameraSmoothTest::RunTest(const FString &Parameters)
     // TODO: spawn controller, toggle camera and tick for <0.5s, assert arm length not equal to target yet
     return true;
 }
+
+// Ritual Energy decay test (stub)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRitualDecayTest, "SVGLND.RitualEnergy.Decay", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FRitualDecayTest::RunTest(const FString &Parameters)
+{
+    // TODO: create player state, set energy >0, simulate 8s tick, verify energy decreased
+    return true;
+}
+
+// HUD binding test (stub)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHUDBindingTest, "SVGLND.HUD.Bindings", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FHUDBindingTest::RunTest(const FString &Parameters)
+{
+    // TODO: add HUD component to dummy controller, ensure delegates exist
+    return true;
+}
