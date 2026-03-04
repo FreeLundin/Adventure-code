@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SVGLND Execution Checklist",
+  "type": "object",
+  "required": ["project", "phases"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["code", "mode", "guardrails"],
+      "properties": {
+        "code": {"type": "string"},
+        "mode": {"type": "string"},
+        "guardrails": {
+          "type": "object",
+          "properties": {
+            "ats_protected": {"type": "boolean"},
+            "no_unattended_graph_edits": {
+              "type": "object",
+              "properties": {
+                "blueprint": {"type": "boolean"},
+                "niagara": {"type": "boolean"},
+                "metasound": {"type": "boolean"}
+              }
+            },
+            "allowed_paths": {"type": "array", "items": {"type": "string"}},
+            "forbidden_paths": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "status", "depends_on", "steps"],
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "status": {"type": "string"},
+          "depends_on": {"type": "array", "items": {"type": "string"}},
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "action"],
+              "properties": {
+                "id": {"type": "string"},
+                "action": {"type": "string"},
+                "target": {"type": "string"},
+                "name": {"type": "string"},
+                "criteria": {"type": "array"},
+                "script": {"type": "string"},
+                "path": {"type": "string"},
+                "minimum_set": {"type": "array", "items": {"type": "string"}},
+                "file": {"type": "string"},
+                "outputs": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          },
+          "sub_tasks": {
+            "type": "array",
+            "items": {"type": "object"}
+          },
+          "exit_criteria": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}
