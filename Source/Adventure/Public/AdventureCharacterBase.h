@@ -12,18 +12,17 @@ class ADVENTURE_API AAdventureCharacterBase : public AAdventureMoverPawnBase
 
 public:
     AAdventureCharacterBase();
+
+    virtual void BeginPlay() override;
+
+protected:
+    // GAS-StateTree bridge
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Adventure|Components")
+    UAdventureGASStateTreeBridgeComponent *GASStateTreeBridge;
 };
 
 UCLASS()
 class ADVENTURE_API ASVGLNDCharacterBase : public AAdventureCharacterBase
 {
     GENERATED_BODY()
-};
-
-    virtual void BeginPlay() override;
-
-protected:
-    // GAS-StateTree bridge
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Adventure|Components")
-    UAdventureGASStateTreeBridgeComponent* GASStateTreeBridge;
 };
