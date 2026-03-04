@@ -47,3 +47,19 @@ bool FHUDBindingTest::RunTest(const FString &Parameters)
     // TODO: add HUD component to dummy controller, ensure delegates exist
     return true;
 }
+
+// Light attack ability test (stub)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLightAttackTest, "SVGLND.Combat.LightAttack", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FLightAttackTest::RunTest(const FString &Parameters)
+{
+    // TODO: spawn player, grant GA_LightAttack, activate it and verify RitualEnergy increased ~3
+    return true;
+}
+
+// Heavy attack ability test (stub)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHeavyAttackTest, "SVGLND.Combat.HeavyAttack", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FHeavyAttackTest::RunTest(const FString &Parameters)
+{
+    // TODO: spawn player, grant GA_HeavyAttack, activate it and verify RitualEnergy increased ~8
+    return true;
+}

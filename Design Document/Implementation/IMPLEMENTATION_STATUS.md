@@ -201,6 +201,13 @@ Phase 1 tasks have been implemented: camera toggle with smoothing, HUD bindings 
 
 ## 📝 Notes for Developers
 
+### Phase 2 Kickoff
+- Combat abilities (Light/Heavy) implemented with RE gain.
+- Tests for these abilities have been stubbed.
+- Next: build Combat Adapter and ATS–Combat Coordinator.
+
+
+
 - All TODO comments are marked with `// TODO:` in .cpp files for easy search
 - Use "Ctrl+Shift+T" in most editors to jump to TODO comments
 - Stub functions return safe defaults (empty FVector, false, 0.0f, etc.)
