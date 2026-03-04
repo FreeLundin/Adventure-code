@@ -1,6 +1,11 @@
 [*.{cpp,h}]
 
 # Naming convention rules (note: currently need to be ordered from more to less specific)
+#
+# **SVGLND prefix policy**
+# Project-specific classes and assets should begin with "SVGLND"
+# (e.g. SVGLNDPlayerController). Existing Adventure* names are legacy.
+
 
 cpp_naming_rule.aactor_prefixed.symbols                    = aactor_class
 cpp_naming_rule.aactor_prefixed.style                      = aactor_style
