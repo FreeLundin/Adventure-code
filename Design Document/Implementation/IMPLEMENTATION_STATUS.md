@@ -136,11 +136,13 @@ This document tracks the status of the critical path C++ infrastructure for Adve
 ## 📋 Function Implementation Roadmap
 
 ### Priority 1 (Days 3-5): Camera & Input
-- [ ] `APC_AdventureController::CycleCamera()` — Cycle through TopDown/TP/FP with smooth transitions
-- [ ] `APC_AdventureController::OnCameraToggleInput()` — Mouse wheel binding
-- [ ] `ACBP_AdventureCharacter::SetupCamera()` — Create and attach camera components
-- [ ] `APC_AdventureController::SetupEnhancedInput()` — Bind input actions in .cpp (or Blueprint)
+- [x] `APC_AdventureController::CycleCamera()` — Cycle through TopDown/TP/FP with smooth transitions
+- [x] `APC_AdventureController::OnCameraToggleInput()` — Mouse wheel binding
+- [x] `ACBP_AdventureCharacter::SetupCamera()` — Create and attach camera components
+- [x] `APC_AdventureController::SetupEnhancedInput()` — Bind input actions in .cpp (or Blueprint)
 
+### Status Update
+Phase 1 tasks have been implemented: camera toggle with smoothing, HUD bindings for Ritual Energy and camera mode, Ritual Energy decay on PlayerState, attribute set ready. Remaining Phase 1 subtasks are structural or blueprint (animation, input assets) which are outside C++ scope.
 ### Priority 2 (Days 5-7): Locomotion
 - [ ] `ACBP_AdventureCharacter::UpdateMovement_PreCMC()` — Apply acceleration based on input
 - [ ] `ACBP_AdventureCharacter::UpdateRotation_PreCMC()` — Apply rotation based on look input
