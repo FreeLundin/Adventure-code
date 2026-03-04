@@ -96,6 +96,36 @@ public:
 
 	// ===== INPUT SETUP =====
 
+	// --- testing hooks ---------------------------------------------------
+	/**
+	 * Override traversal active check for automated tests. When true, all
+	 * combat abilities will be blocked regardless of actual traversal state.
+	 */
+	UPROPERTY(BlueprintReadOnly, Category="Testing")
+	bool bTraversalOverride = false;
+
+	/**
+	 * Enable/disable the traversal override. Provided so unit tests can
+	 * exercise TryActivateAbilityByTag without constructing a full state tree.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Testing")
+	void SetTraversalOverride(bool b) { bTraversalOverride = b; }
+
+	// --- debug statistics (used by automated tests) -------------------------
+	/**
+	 * Number of times TryActivateAbilityByTag successfully forwarded to the
+	 * ability system component. 0 indicates the request was blocked.
+	 */
+	UPROPERTY(VisibleAnywhere, Category="Debug")
+	int32 ActivationAttempts = 0;
+
+	/**
+	 * Last gameplay tag that was attempted to activate. Only valid if
+	 * ActivationAttempts > 0.
+	 */
+	UPROPERTY(VisibleAnywhere, Category="Debug")
+	FGameplayTag LastAttemptedTag;
+
 	/**
 	 * SetupInputComponent
 	 *
@@ -306,6 +336,21 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	void CycleCamera();
+
+	/**
+	 * Smooth transition state (internal)
+	 */
+	bool bCameraTransitionActive;
+	float CameraTransitionTimer;
+	float CameraTransitionDuration;
+	float CameraStartArmLength;
+	float CameraTargetArmLength;
+	FRotator CameraStartArmRotation;
+	FRotator CameraTargetArmRotation;
+	float CameraStartFOV;
+	float CameraTargetFOV;
+
+	virtual void Tick(float DeltaTime) override;
 
 	/**
 	 * GetCurrentCamera Style

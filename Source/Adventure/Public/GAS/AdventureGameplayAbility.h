@@ -134,3 +134,34 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData *TriggerEventData) override;
 };
+
+// new defensive abilities added in Phase 2
+UCLASS()
+class ADVENTURE_API UGA_AdventureBlock : public UAdventureGameplayAbility
+{
+	GENERATED_BODY()
+
+public:
+	UGA_AdventureBlock();
+
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo *ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData *TriggerEventData) override;
+};
+
+UCLASS()
+class ADVENTURE_API UGA_AdventureParry : public UAdventureGameplayAbility
+{
+	GENERATED_BODY()
+
+public:
+	UGA_AdventureParry();
+
+	virtual void ActivateAbility(
+		const FGameplayAbilitySpecHandle Handle,
+		const FGameplayAbilityActorInfo *ActorInfo,
+		const FGameplayAbilityActivationInfo ActivationInfo,
+		const FGameplayEventData *TriggerEventData) override;
+};

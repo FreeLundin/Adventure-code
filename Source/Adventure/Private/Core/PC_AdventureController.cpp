@@ -210,8 +210,33 @@ void APC_AdventureController::OnInteractInput(const FInputActionValue &Value)
 
 void APC_AdventureController::TryActivateAbilityByTag(FGameplayTag AbilityTag)
 {
+	// testing override takes highest precedence
+	if (bTraversalOverride)
+	{
+		UE_LOG(LogTemp, Verbose, TEXT("TryActivateAbilityByTag blocked via override"));
+		return;
+	}
+
+	// Combat adapter: prevent activating abilities while traversal is active.
+	if (CachedAdventureCharacter)
+	{
+		if (UAdventureGASStateTreeBridgeComponent *Bridge = CachedAdventureCharacter->FindComponentByClass<UAdventureGASStateTreeBridgeComponent>())
+		{
+			if (Bridge->IsTraversalActive())
+			{
+				// traversal has authority, block combat abilities
+				UE_LOG(LogTemp, Verbose, TEXT("TryActivateAbilityByTag blocked during traversal"));
+				return;
+			}
+		}
+	}
+
 	if (CachedAbilitySystemComponent && AbilityTag.IsValid())
 	{
+		// log statistics for tests
+		ActivationAttempts++;
+		LastAttemptedTag = AbilityTag;
+
 		FGameplayTagContainer TagContainer;
 		TagContainer.AddTag(AbilityTag);
 		CachedAbilitySystemComponent->TryActivateAbilitiesByTag(TagContainer);
@@ -286,13 +311,13 @@ static FCameraSettings GetSettingsForStyle(E_CameraStyle Style)
 	switch (Style)
 	{
 	case E_CameraStyle::TopDown:
-		return {2000.f, FRotator(-90.f,0.f,0.f), 90.f};
+		return {2000.f, FRotator(-90.f, 0.f, 0.f), 90.f};
 	case E_CameraStyle::ThirdPerson:
-		return {300.f, FRotator(-10.f,0.f,0.f), 90.f};
+		return {300.f, FRotator(-10.f, 0.f, 0.f), 90.f};
 	case E_CameraStyle::FirstPerson:
 		return {0.f, FRotator::ZeroRotator, 100.f};
 	default:
-		return {300.f, FRotator(-10.f,0.f,0.f), 90.f};
+		return {300.f, FRotator(-10.f, 0.f, 0.f), 90.f};
 	}
 }
 
@@ -312,7 +337,8 @@ void APC_AdventureController::CycleCamera()
 	SetCameraTarget(NewCameraStyle, false);
 
 	// log and HUD
-	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") : (NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person") : TEXT("First-Person");
+	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") : (NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person")
+																																				  : TEXT("First-Person");
 	UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::CycleCamera - Switched to %s camera"), *CameraModeName);
 	if (HUDWidget)
 	{

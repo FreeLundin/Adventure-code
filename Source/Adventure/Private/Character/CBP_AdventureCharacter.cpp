@@ -50,7 +50,9 @@ ACBP_AdventureCharacter::ACBP_AdventureCharacter()
 		UGA_AdventureTraversal::StaticClass(),
 		UGA_AdventureInteract::StaticClass(),
 		UGA_AdventureLightAttack::StaticClass(),
-		UGA_AdventureHeavyAttack::StaticClass()};
+		UGA_AdventureHeavyAttack::StaticClass(),
+		UGA_AdventureBlock::StaticClass(),
+		UGA_AdventureParry::StaticClass()};
 
 	DefaultAttributesEffect = UGE_AdventureDefaultAttributes::StaticClass();
 }

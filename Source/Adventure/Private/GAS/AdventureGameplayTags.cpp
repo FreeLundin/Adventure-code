@@ -12,3 +12,7 @@ UE_DEFINE_GAMEPLAY_TAG(AdventureGameplayTags::Ability_Interact, "Ability.Interac
 // attack tags
 UE_DEFINE_GAMEPLAY_TAG(AdventureGameplayTags::Ability_Attack_Light, "Ability.Attack.Light");
 UE_DEFINE_GAMEPLAY_TAG(AdventureGameplayTags::Ability_Attack_Heavy, "Ability.Attack.Heavy");
+
+// defensive/combat tags
+UE_DEFINE_GAMEPLAY_TAG(AdventureGameplayTags::Ability_Attack_Block, "Ability.Attack.Block");
+UE_DEFINE_GAMEPLAY_TAG(AdventureGameplayTags::Ability_Attack_Parry, "Ability.Attack.Parry");

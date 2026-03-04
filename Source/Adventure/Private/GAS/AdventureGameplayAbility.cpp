@@ -78,6 +78,36 @@ UGA_AdventureClimb::UGA_AdventureClimb()
 	SetAssetTags(Tags);
 }
 
+UGA_AdventureLightAttack::UGA_AdventureLightAttack()
+{
+	FGameplayTagContainer Tags;
+	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Light);
+	SetAssetTags(Tags);
+}
+
+UGA_AdventureHeavyAttack::UGA_AdventureHeavyAttack()
+{
+	FGameplayTagContainer Tags;
+	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Heavy);
+	SetAssetTags(Tags);
+}
+
+UGA_AdventureBlock::UGA_AdventureBlock()
+{
+	FGameplayTagContainer Tags;
+	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Block);
+	SetAssetTags(Tags);
+}
+
+UGA_AdventureParry::UGA_AdventureParry()
+{
+	FGameplayTagContainer Tags;
+	Tags.AddTag(AdventureGameplayTags::Ability_Attack_Parry);
+	SetAssetTags(Tags);
+}
+
+
+
 void UGA_AdventureTraversal::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo *ActorInfo,
@@ -143,18 +173,73 @@ void UGA_AdventureClimb::ActivateAbility(
 
 	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 }
+
+void UGA_AdventureLightAttack::ActivateAbility(
 	const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActorInfo *ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData *TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
 	{
-		Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
-		if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
-		{
-			FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
-			ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 8.0f);
-		}
-
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 3.0f);
 	}
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+void UGA_AdventureHeavyAttack::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo *ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData *TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
+	{
+		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 8.0f);
+	}
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+void UGA_AdventureBlock::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo *ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData *TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	// block grants a small amount of ritual energy for successful defense
+	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
+	{
+		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 1.0f);
+	}
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}
+
+void UGA_AdventureParry::ActivateAbility(
+	const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo *ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData *TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	// parry gives a moderate energy bonus on perfect timing
+	if (ActorInfo && ActorInfo->AbilitySystemComponent.IsValid())
+	{
+		FGameplayAttribute Attr = UAdventureAttributeSet::GetRitualEnergyAttribute();
+		ActorInfo->AbilitySystemComponent->ApplyModToAttribute(Attr, EGameplayModOp::Additive, 5.0f);
+	}
+
+	EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
+}

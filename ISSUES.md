@@ -1,3 +1,5 @@
+> **NOTE:** Documentation is currently being consolidated; the canonical GDD now lives in `README.md`.  This issues list will be reviewed and realigned with the new roadmap.
+
 # Actionable Issues from Simplified Roadmap
 
 The following items correspond to the task templates defined in the implementation plan.  They should be created as GitHub issues (one per entry) and assigned to the appropriate owner or milestone.
@@ -28,11 +30,23 @@ The following items correspond to the task templates defined in the implementati
 
 ## Phase 2 – Combat & GAS
 
-### GAS-001: Implement GA_LightAttack with Ritual Energy Gain
+### GAS-001: Implement GA_LightAttack with Ritual Energy Gain *(completed)*
 **Description:** Create C++/BP ability for light attack. On hit, apply GameplayEffect granting +3 Ritual Energy. Tag with `ability.attack.light`. Integrate with animation montage and gameplay cue.
 **Acceptance:** Ability activates on input, grants +3 RE on successful hit, triggers visual/audio cue, respects ability cooldown.
 
-(Additional combat issues such as heavy attack, parry, block, dodge, and enemy AI will be created similarly.)
+### GAS-002: Implement GA_HeavyAttack with Ritual Energy Gain *(completed)*
+**Description:** Create C++/BP ability for heavy attack. On hit, apply GameplayEffect granting +8 Ritual Energy. Tag with `ability.attack.heavy`.
+**Acceptance:** Ability activates on input, grants +8 RE on successful hit.
+
+### GAS-003: Implement GA_Block ability *(completed)*
+**Description:** Defensive ability that grants +1 Ritual Energy when used successfully. Tagged `ability.attack.block`.
+**Acceptance:** Ability can be activated via input and modifies RE accordingly.
+
+### GAS-004: Implement GA_Parry ability *(completed)*
+**Description:** Perfect-timing defense grants +5 Ritual Energy; tagged `ability.attack.parry`.
+**Acceptance:** Activation increases RE; testable via automation.
+
+(Other Phase 2 combat tasks such as enemy AI and additional mechanics will be added in future sprints.)
 
 ## Phase 3 – Motion Matching & Anim Integration
 
