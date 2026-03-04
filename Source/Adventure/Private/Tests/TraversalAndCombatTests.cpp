@@ -23,3 +23,11 @@ bool FCameraToggleTest::RunTest(const FString &Parameters)
     // TODO: spawn controller, call CycleCamera(), verify CameraStyle changed
     return true;
 }
+
+// Camera smoothing test (stub)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraSmoothTest, "SVGLND.Camera.SmoothTransition", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FCameraSmoothTest::RunTest(const FString &Parameters)
+{
+    // TODO: spawn controller, toggle camera and tick for <0.5s, assert arm length not equal to target yet
+    return true;
+}

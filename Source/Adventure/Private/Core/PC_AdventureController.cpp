@@ -273,6 +273,29 @@ void APC_AdventureController::SetGamePaused(bool bPause)
 	// TODO: Disable/enable AI
 }
 
+// helper struct for camera parameters
+struct FCameraSettings
+{
+	float ArmLength;
+	FRotator ArmRotation;
+	float FOV;
+};
+
+static FCameraSettings GetSettingsForStyle(E_CameraStyle Style)
+{
+	switch (Style)
+	{
+	case E_CameraStyle::TopDown:
+		return {2000.f, FRotator(-90.f,0.f,0.f), 90.f};
+	case E_CameraStyle::ThirdPerson:
+		return {300.f, FRotator(-10.f,0.f,0.f), 90.f};
+	case E_CameraStyle::FirstPerson:
+		return {0.f, FRotator::ZeroRotator, 100.f};
+	default:
+		return {300.f, FRotator(-10.f,0.f,0.f), 90.f};
+	}
+}
+
 void APC_AdventureController::CycleCamera()
 {
 	if (!CachedAdventureCharacter)
@@ -281,23 +304,69 @@ void APC_AdventureController::CycleCamera()
 	}
 
 	// Cycle to next camera mode (TopDown → ThirdPerson → FirstPerson → TopDown)
-	// Camera modes: 0 = TopDown, 1 = ThirdPerson, 2 = FirstPerson
 	CurrentCameraStyleIndex = (CurrentCameraStyleIndex + 1) % 3;
-
-	// Update character's camera style
 	E_CameraStyle NewCameraStyle = static_cast<E_CameraStyle>(CurrentCameraStyleIndex);
 	CachedAdventureCharacter->CameraStyle = NewCameraStyle;
-	// apply new settings immediately
-	CachedAdventureCharacter->ApplyCameraStyle();
 
-	// Log the camera change
-	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") : (NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person")
-																																				  : TEXT("First-Person");
+	// start transition toward new parameters
+	SetCameraTarget(NewCameraStyle, false);
 
+	// log and HUD
+	const FString CameraModeName = (NewCameraStyle == E_CameraStyle::TopDown) ? TEXT("Top-Down") : (NewCameraStyle == E_CameraStyle::ThirdPerson) ? TEXT("Third-Person") : TEXT("First-Person");
 	UE_LOG(LogTemp, Log, TEXT("APC_AdventureController::CycleCamera - Switched to %s camera"), *CameraModeName);
+	if (HUDWidget)
+	{
+		HUDWidget->SetCameraMode(CameraModeName);
+	}
+}
 
-	// TODO: Add smooth camera transition animation
-	// TODO: Update HUD to display current camera mode
+void APC_AdventureController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	if (bCameraTransitionActive && CachedAdventureCharacter)
+	{
+		USpringArmComponent *SpringArm = CachedAdventureCharacter->FindComponentByClass<USpringArmComponent>();
+		UCameraComponent *Cam = CachedAdventureCharacter->FindComponentByClass<UCameraComponent>();
+		if (SpringArm && Cam)
+		{
+			CameraTransitionTimer += DeltaTime;
+			float Alpha = FMath::Clamp(CameraTransitionTimer / CameraTransitionDuration, 0.f, 1.f);
+			SpringArm->TargetArmLength = FMath::Lerp(CameraStartArmLength, CameraTargetArmLength, Alpha);
+			SpringArm->SetRelativeRotation(FMath::Lerp(CameraStartArmRotation, CameraTargetArmRotation, Alpha));
+			Cam->SetFieldOfView(FMath::Lerp(CameraStartFOV, CameraTargetFOV, Alpha));
+			if (Alpha >= 1.f)
+			{
+				bCameraTransitionActive = false;
+			}
+		}
+	}
+}
+
+void APC_AdventureController::SetCameraTarget(E_CameraStyle Style, bool bInstant)
+{
+	FCameraSettings Target = GetSettingsForStyle(Style);
+	USpringArmComponent *SpringArm = CachedAdventureCharacter ? CachedAdventureCharacter->FindComponentByClass<USpringArmComponent>() : nullptr;
+	UCameraComponent *Cam = CachedAdventureCharacter ? CachedAdventureCharacter->FindComponentByClass<UCameraComponent>() : nullptr;
+	if (SpringArm && Cam)
+	{
+		// record start values
+		CameraStartArmLength = SpringArm->TargetArmLength;
+		CameraStartArmRotation = SpringArm->GetRelativeRotation();
+		CameraStartFOV = Cam->FieldOfView;
+		// set targets
+		CameraTargetArmLength = Target.ArmLength;
+		CameraTargetArmRotation = Target.ArmRotation;
+		CameraTargetFOV = Target.FOV;
+		CameraTransitionTimer = 0.f;
+		CameraTransitionDuration = 0.5f;
+		bCameraTransitionActive = !bInstant;
+		if (bInstant)
+		{
+			SpringArm->TargetArmLength = Target.ArmLength;
+			SpringArm->SetRelativeRotation(Target.ArmRotation);
+			Cam->SetFieldOfView(Target.FOV);
+		}
+	}
 }
 
 int32 APC_AdventureController::GetCurrentCameraStyle() const

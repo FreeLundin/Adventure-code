@@ -18,6 +18,10 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
     void SetRitualEnergy(float NewValue);
 
+    /** Display current camera mode name (TopDown/ThirdPerson/FirstPerson) */
+    UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
+    void SetCameraMode(const FString& ModeName);
+
     /** Update Rage bar. */
     UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
     void SetRage(float NewValue, float MaxValue);
