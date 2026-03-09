@@ -43,7 +43,7 @@ The following items correspond to the task templates defined in the implementati
 - Done: GA_LightAttack, GA_HeavyAttack, GA_Block, GA_Parry (all implemented and unit‑tested)
 - Undone: enemy AI, additional combat mechanics, encounter scripting
 - Blocked: none, workable in parallel with Phase 3
-- Percent complete: ~65% (enemies scaffolded; behaviour pending)
+- Percent complete: ~85% (basic AI behaviour and spawner implemented)
 
 
 ### GAS-001: Implement GA_LightAttack with Ritual Energy Gain *(completed)*
@@ -64,9 +64,13 @@ The following items correspond to the task templates defined in the implementati
 
 (Other Phase 2 combat tasks such as enemy AI and additional mechanics will be added in future sprints.)
 
+### ENCOUNTER-001: Simple enemy spawner *(completed)*
+**Description:** Implement an actor (`AEnemySpawner`) that periodically spawns a chosen enemy class within a radius. Useful for playtesting combat/traversal loops.
+**Acceptance:** Spawner actor compiles and can be placed in a level; enemies appear at the configured interval.
+
 ### AI-001: Scaffold enemy archetypes *(in progress)*
-**Description:** Create base enemy classes (`AEnemyBase`, `AEnemyMutantRusher`, `AEnemyCultist`) with simple properties and a basic AI controller that chases the player. Behaviour currently tick‑based; full StateTree integration pending.
-**Acceptance:** Classes compile, have automation smoke tests, and spawn with an `AEnemyAIController` that issues MoveToActor commands.
+**Description:** Create base enemy classes (`AEnemyBase`, `AEnemyMutantRusher`, `AEnemyCultist`) with simple properties and a basic AI controller that chases the player. Behaviour currently tick‑based and includes distance‑based dash logic; full StateTree integration pending.
+**Acceptance:** Classes compile, have automation smoke tests, and spawn with an `AEnemyAIController` that issues MoveToActor commands and accelerates when near the player.
 
 ## Phase 3 – Motion Matching & Anim Integration
 
@@ -75,7 +79,7 @@ The following items correspond to the task templates defined in the implementati
 diagram, initial pipeline verification
 - Undone: per‑frame feature computation, CI integration, additional clip exports
 - Blocked: waiting on pipeline enhancements (tracked in issue #2)
-- Percent complete: ~80% (per-frame export implemented; CI diff against baseline added)
+- Percent complete: ~90% (training stub added; manifest integration script present)
 
 
 ### MM-001: Export Animation Manifest for Motion-Matching *(in progress)*
