@@ -30,7 +30,7 @@
 ### Integration tools evaluated
 - **Microsoft 365** (Teams, Planner, OneDrive, Power Automate) was recommended for cross‑discipline communication, task tracking and asset storage. Set up a Planner board aliased to our GitHub issues and a Teams channel for CI/PR notifications to centralize collaboration.
 - **Nsight Extensions** for Visual Studio/VS Code provide GPU frame capture, shader debugging and system‑wide profiling. Install on all artist/engineer workstations to diagnose rendering bottlenecks and compute kernels.
-- **NVIDIA Omniverse** offers USD‑based live‑sync between DCC tools and Unreal; consider proof‑of‑concept sessions to allow artists and designers to work on the same scene without constant exports.
+- **Only use official Unreal plugins** in production; experimental or third‑party tools can introduce compatibility issues. For example, rather than relying on an Omniverse connector, use Epic’s USD plugin or built‑in Sequencer features when possible. This reduces upgrade risk and ensures support from Epic.
 
 ### Lessons learned implementing documentation cleanup
 - Be careful with `git mv` paths; earlier attempts inadvertently staged deletions of many docs. Always verify `git status` before committing moves.
