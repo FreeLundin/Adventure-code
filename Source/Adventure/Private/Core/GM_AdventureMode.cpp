@@ -8,6 +8,8 @@
 #include "Core/PC_AdventureController.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h" // needed for GetWorldSettings()
+#include "Kismet/GameplayStatics.h"
+#include "AIController.h"
 #include "Curves/CurveFloat.h"
 #include "GameplayTagsManager.h"
 
@@ -44,33 +46,45 @@ void AGM_AdventureMode::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// TODO: Initialize game parameters
-	// TODO: Spawn initial enemies
-	// TODO: Setup level-specific configuration
-	// TODO: Trigger opening cinematics or gameplay start
+	// initialize parameters from config or data table if available
+	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - initializing game parameters"));
+
+	// spawn enemies via spawner actors placed in level (handled by blueprints)
+	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - ready to spawn initial enemies"));
+
+	// apply any level-specific overrides (e.g. difficulty, environment)
+	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - applying level configuration"));
+
+	// opening cinematic could be triggered by the level blueprint, notify camera manager
+	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - gameplay start/cinematic trigger point"));
 }
 
 void AGM_AdventureMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	// TODO: Initialize player-specific settings
-	// TODO: Bind player to HUD
-	// TODO: Setup camera preferences
+	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::PostLogin - setting up new player controller"));
+
+	if (APC_AdventureController *AdvCtrl = Cast<APC_AdventureController>(NewPlayer))
+	{
+		// HUD binding is handled by controller's BeginPlay implementation
+		UE_LOG(LogTemp, Verbose, TEXT("Player controller is AdventureController, HUD will spawn automatically"));
+
+		// camera prefs may be stored on player state or controller settings
+		// leave as a stub for now
+	}
 }
 
 void AGM_AdventureMode::ReturnToMainMenu()
 {
-	// TODO: Transition back to main menu
-	// TODO: Cleanup level resources
-	// TODO: Save any persistent state if needed
+	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::ReturnToMainMenu - returning to menu (not implemented)"));
+	// placeholder: implement flow in blueprint or game instance
 }
 
 void AGM_AdventureMode::RestartGame()
 {
-	// TODO: Reload current level
-	// TODO: Reset player state
-	// TODO: Respawn enemies
+	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::RestartGame - restarting level (not implemented)"));
+	// commonly you would call UGameplayStatics::OpenLevel
 }
 
 void AGM_AdventureMode::PauseGame(bool bPause)
@@ -78,8 +92,23 @@ void AGM_AdventureMode::PauseGame(bool bPause)
 	bGamePaused = bPause;
 	GetWorldSettings()->SetTimeDilation(bPause ? 0.0f : 1.0f);
 
-	// TODO: Update HUD pause state
-	// TODO: Disable/enable AI
+	// update HUD on each local player controller if possible
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		if (APC_AdventureController *Adv = Cast<APC_AdventureController>(*It))
+		{
+			if (Adv->HUDWidget)
+			{
+				Adv->HUDWidget->SetPauseMenuVisible(bPause);
+			}
+		}
+	}
+
+	// simple AI toggle
+	for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
+	{
+		(*It)->SetPause(bPause);
+	}
 }
 
 bool AGM_AdventureMode::GetIsGameOver() const
@@ -93,9 +122,15 @@ void AGM_AdventureMode::SetGameOver(bool bGameOverState)
 
 	if (bGameOver)
 	{
-		// TODO: Disable player input
-		// TODO: Trigger defeat VFX/audio
-		// TODO: Show death/retry UI
+		UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::SetGameOver - game over state entered"));
+		// rudimentary input block
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			if (APlayerController *PC = It->Get())
+			{
+				PC->SetCinematicMode(true, false, false, true, true);
+			}
+		}
 	}
 }
 

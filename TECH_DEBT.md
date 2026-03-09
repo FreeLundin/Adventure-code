@@ -4,9 +4,9 @@ This document tracks known areas of technical debt and their current status.  Cl
 
 | ID | Area | Description | Status | Notes |
 |----|------|-------------|--------|-------|
-| TD-001 | Input system | Enhanced input actions unbound in `PC_AdventureController.cpp` | In progress | Basic bindings added; remaining blueprint/EIS integration pending.
-| TD-002 | Replication | Character lacks `GetLifetimeReplicatedProps` entries | In progress | Added function with two properties; verify network behaviour.
-| TD-003 | Camera transitions | TODO for smooth blending and HUD update | In progress | CycleCamera logic updated; smooth transition implementation still required.
+| TD-001 | Input system | Enhanced input actions unbound in `PC_AdventureController.cpp` | Completed | Actions are now bound in SetupEnhancedInput; input mapping context support added.
+| TD-002 | Replication | Character lacks `GetLifetimeReplicatedProps` entries | Completed | Two properties registered (TraversalResult, CharacterInputState).
+| TD-003 | Camera transitions | TODO for smooth blending and HUD update | Completed | Smooth blend logic and HUD notifications are implemented in controller.
 | TD-004 | Stub headers | Previous `*.generated.h` files accidentally committed | Closed | .gitignore now ignores them.
 | TD-005 | DataAsset tooling | Motion-matching pipeline external, no CI check | In progress | Script added (`Automation/motion_matching_pipeline.py`); runbook created; CI hookup pending.  |
 | TD-006 | Cultural review | Artifact implementation lacks formal checklist | Open | Pending `runbooks/CULTURAL_REVIEW_CHECKLIST.md`.
