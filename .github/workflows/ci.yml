@@ -31,3 +31,6 @@ jobs:
           $gen = git ls-files "*.generated.h" || $null
           if ($gen) { Write-Host "Committed generated headers:\n$gen"; $errors = $true }
           if ($errors) { Write-Error "Lint failures detected" }
+      - name: Verify project plugins
+        run: |
+          python scripts/verify_plugins.py

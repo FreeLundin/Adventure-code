@@ -1,0 +1,6 @@
+# List of project‑level plugin folder names that are permitted.
+# Lines beginning with '#' are comments.
+# Empty file means no project plugins are allowed.
+
+# add folder names here, e.g.
+# MyOfficialPlugin
