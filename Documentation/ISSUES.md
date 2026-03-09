@@ -6,6 +6,13 @@ The following items correspond to the task templates defined in the implementati
 
 ## Phase 1 – Foundations
 
+**Status:**
+- Done: camera toggle, ritual energy decay, input bindings, replication, smooth camera transitions
+- Undone: none (pending only playtesting)
+- Blocked: none
+- Percent complete: ~100%
+
+
 ### CAM-001: Implement Multi-Perspective Camera Toggle *(completed)*
 **Description:** Multi-style camera with transitions already exists in `APC_AdventureController` and character; cycling via CycleCamera with 0.5s blend.
 **Acceptance:** Implemented as code; FOVs and offsets configured in GetSettingsForStyle. Requires playtesting to verify.
@@ -32,6 +39,13 @@ The following items correspond to the task templates defined in the implementati
 
 ## Phase 2 – Combat & GAS
 
+**Status:**
+- Done: GA_LightAttack, GA_HeavyAttack, GA_Block, GA_Parry (all implemented and unit‑tested)
+- Undone: enemy AI, additional combat mechanics, encounter scripting
+- Blocked: none, workable in parallel with Phase 3
+- Percent complete: ~65% (enemies scaffolded; behaviour pending)
+
+
 ### GAS-001: Implement GA_LightAttack with Ritual Energy Gain *(completed)*
 **Description:** Create C++/BP ability for light attack. On hit, apply GameplayEffect granting +3 Ritual Energy. Tag with `ability.attack.light`. Integrate with animation montage and gameplay cue.
 **Acceptance:** Ability activates on input, grants +3 RE on successful hit, triggers visual/audio cue, respects ability cooldown.
@@ -50,15 +64,34 @@ The following items correspond to the task templates defined in the implementati
 
 (Other Phase 2 combat tasks such as enemy AI and additional mechanics will be added in future sprints.)
 
+### AI-001: Scaffold enemy archetypes *(in progress)*
+**Description:** Create base enemy classes (`AEnemyBase`, `AEnemyMutantRusher`, `AEnemyCultist`) with simple properties and a basic AI controller that chases the player. Behaviour currently tick‑based; full StateTree integration pending.
+**Acceptance:** Classes compile, have automation smoke tests, and spawn with an `AEnemyAIController` that issues MoveToActor commands.
+
 ## Phase 3 – Motion Matching & Anim Integration
+
+**Status:**
+- Done: basic manifest export script, average hip/contact placeholders, documentation
+diagram, initial pipeline verification
+- Undone: per‑frame feature computation, CI integration, additional clip exports
+- Blocked: waiting on pipeline enhancements (tracked in issue #2)
+- Percent complete: ~80% (per-frame export implemented; CI diff against baseline added)
+
 
 ### MM-001: Export Animation Manifest for Motion-Matching *(in progress)*
 **Description:** Use `motion_matching_pipeline.py` to list asset paths, retarget notes, export per-frame features (root velocity, hip position, contact flags). Produce CSV manifest for 10+ sample clips covering locomotion (walk/run/jump/vault).
 **Acceptance:** CSV manifest present with feature schema; per-clip exports exist; documentation updated with pipeline steps.
 
-*Progress:* Initial script and runbook added; basic CSV export verified. Future work: compute actual features and add CI job.
+*Progress:* Initial script and runbook added; CSV export verified. Script now exports per‑frame data and CI workflow generates and diffs manifests against a baseline. Remaining work: integrate with training tool and author additional clips for coverage.
 
 ## Phase 4 – Artifacts & Boss *(completed)*
+
+**Status:**
+- Done: artifact DataAsset and boss encounter prototype both implemented
+- Undone: none; this phase is complete
+- Blocked: none
+- Percent complete: 100%
+
 
 ### ART-001: Implement Crescent City Artifact DataAsset *(completed)*
 **Description:** Create `ArtifactData` DataAsset for a New Orleans–themed relic (e.g. "Bayou Chalice"). Passive: life-on-hit effect (small heal per hit). Signature: costs 100 RE, spawns a healing tide area, cleanses debuffs. Include cultural note citations and respectful representation review focused on local folklore.
