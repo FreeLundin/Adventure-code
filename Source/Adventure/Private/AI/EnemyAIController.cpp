@@ -19,7 +19,19 @@ void AEnemyAIController::Tick(float DeltaSeconds)
     ACharacter* PlayerChar = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
     if (PlayerChar)
     {
-        // simple move-to
-        MoveToActor(PlayerChar, 100.0f, true, true, true, 0, true);
+        const float Dist = FVector::Dist(Controlled->GetActorLocation(), PlayerChar->GetActorLocation());
+        // if very close, dash faster
+        float Acceptance = 100.0f;
+        float SpeedFactor = 1.0f;
+        if (Dist < 500.0f)
+        {
+            Acceptance = 50.0f;
+            SpeedFactor = 2.0f;
+        }
+        MoveToActor(PlayerChar, Acceptance, true, true, true, 0, true);
+        if (ACharacter* Ch = Cast<ACharacter>(Controlled))
+        {
+            Ch->GetCharacterMovement()->MaxWalkSpeed = 400.f * SpeedFactor;
+        }
     }
 }
