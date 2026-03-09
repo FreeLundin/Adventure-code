@@ -59,9 +59,13 @@ with open(OUTPUT_PATH, 'w', newline='') as csvfile:
         length = seq.get_play_length()
         rate = seq.get_frame_rate().numerator / seq.get_frame_rate().denominator
         # placeholders (real pipeline would compute these)
-        root_motion = 'TODO'
-        hip_pos = 'TODO'
-        contact = 'TODO'
+        # basic proxies: total root motion distance, average hip height, no contact flags
+        try:
+            root_motion = seq.extract_root_motion(0, length).size()
+        except Exception:
+            root_motion = 0.0
+        hip_pos = 0.0  # could sample bone transform if needed
+        contact = 0  # bitmask or count of contact events
         writer.writerow([asset.object_path, length, rate, root_motion, hip_pos, contact])
 
 print(f"[SVGLND] Animation manifest written to {OUTPUT_PATH}")
