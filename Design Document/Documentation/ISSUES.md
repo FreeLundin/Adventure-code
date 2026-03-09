@@ -54,9 +54,9 @@ The following items correspond to the task templates defined in the implementati
 
 ### MM-001: Export Animation Manifest for Motion-Matching *(in progress)*
 **Description:** Use `motion_matching_pipeline.py` to list asset paths, retarget notes, export per-frame features (root velocity, hip position, contact flags). Produce CSV manifest for 10+ sample clips covering locomotion (walk/run/jump/vault).
-**Acceptance:** CSV manifest present with feature schema; per-clip exports exist; documentation updated with pipeline steps.
+**Acceptance:** CSV manifest present with feature schema; per-clip exports exist; documentation updated with pipeline steps; script computes averaged hip position and contact count; CI workflow runs the script on each push.
 
-*Progress:* Initial script and runbook added; basic CSV export verified. Future work: compute actual features and add CI job.
+*Progress:* Initial script and runbook added; basic CSV export verified. Hip/contact computations added; issue #2 created to track further enhancements and CI integration.
 
 ## Phase 4 – Artifacts & Boss *(completed)*
 

@@ -185,6 +185,14 @@ To support development and profiling we will integrate the following tools into 
 
 These tools are not required for the game logic itself, but will be standard across the studio and should be included in onboarding documentation.
 
+> **Other useful tooling**
+> * RenderDoc / NVIDIA Nsight Graphics for frame captures (alternative to Nsight extension).
+> * PIX (Windows GPU/CPU capture) for low‑level debugging on Xbox/PC.
+> * Visual Studio Profiler & concurrency visualizer for CPU hotspots.
+> * GitHub Projects / GitHub CLI for issue/task management.
+> * A good Diff/merge tool (WinMerge, BeyondCompare) for resolving large binary assets when LFS is not used.
+> * Portable build farm scripts (PowerShell/azd) for consistent environment setup.
+
 ---
 
 ## Risks & Mitigations
