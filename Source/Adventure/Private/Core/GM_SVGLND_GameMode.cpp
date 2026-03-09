@@ -1,11 +1,11 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 // Adventure Project - Core Game Mode Implementation
 
-#include "Core/GM_AdventureMode.h"
+#include "Core/GM_SVGLND_GameMode.h"
 #include "Character/CBP_AdventureCharacter.h"
 #include "Character/CBP_AdventureCharacter_Mover.h"
 #include "Core/AdventurePlayerState.h"
-#include "Core/PC_AdventureController.h"
+#include "Core/PC_SVGLND_PlayerController.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/WorldSettings.h" // needed for GetWorldSettings()
 #include "Kismet/GameplayStatics.h"
@@ -13,12 +13,12 @@
 #include "Curves/CurveFloat.h"
 #include "GameplayTagsManager.h"
 
-AGM_AdventureMode::AGM_AdventureMode()
+AGM_SVGLND_GameMode::AGM_SVGLND_GameMode()
 {
 	// Set default player controller and character class
 	// NOTE: Using Mover2 variant (ACBP_AdventureCharacter_Mover) as default pawn
 	// for advanced movement system. Can toggle between CMC and Mover2 via blueprint override.
-	PlayerControllerClass = APC_AdventureController::StaticClass();
+	PlayerControllerClass = APC_SVGLND_PlayerController::StaticClass();
 	DefaultPawnClass = ACBP_AdventureCharacter_Mover::StaticClass();
 	PlayerStateClass = AAdventurePlayerState::StaticClass();
 
@@ -42,30 +42,30 @@ AGM_AdventureMode::AGM_AdventureMode()
 	DefaultSceneRoot = RootComponent;
 }
 
-void AGM_AdventureMode::BeginPlay()
+void AGM_SVGLND_GameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
 	// initialize parameters from config or data table if available
-	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - initializing game parameters"));
+	UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::BeginPlay - initializing game parameters"));
 
 	// spawn enemies via spawner actors placed in level (handled by blueprints)
-	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - ready to spawn initial enemies"));
+	UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::BeginPlay - ready to spawn initial enemies"));
 
 	// apply any level-specific overrides (e.g. difficulty, environment)
-	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - applying level configuration"));
+	UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::BeginPlay - applying level configuration"));
 
 	// opening cinematic could be triggered by the level blueprint, notify camera manager
-	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::BeginPlay - gameplay start/cinematic trigger point"));
+	UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::BeginPlay - gameplay start/cinematic trigger point"));
 }
 
-void AGM_AdventureMode::PostLogin(APlayerController* NewPlayer)
+void AGM_SVGLND_GameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::PostLogin - setting up new player controller"));
+	UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::PostLogin - setting up new player controller"));
 
-	if (APC_AdventureController *AdvCtrl = Cast<APC_AdventureController>(NewPlayer))
+	if (APC_SVGLND_PlayerController *AdvCtrl = Cast<APC_SVGLND_PlayerController>(NewPlayer))
 	{
 		// HUD binding is handled by controller's BeginPlay implementation
 		UE_LOG(LogTemp, Verbose, TEXT("Player controller is AdventureController, HUD will spawn automatically"));
@@ -75,19 +75,19 @@ void AGM_AdventureMode::PostLogin(APlayerController* NewPlayer)
 	}
 }
 
-void AGM_AdventureMode::ReturnToMainMenu()
+void AGM_SVGLND_GameMode::ReturnToMainMenu()
 {
-	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::ReturnToMainMenu - returning to menu (not implemented)"));
+	UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::ReturnToMainMenu - returning to menu (not implemented)"));
 	// placeholder: implement flow in blueprint or game instance
 }
 
-void AGM_AdventureMode::RestartGame()
+void AGM_SVGLND_GameMode::RestartGame()
 {
-	UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::RestartGame - restarting level (not implemented)"));
+	UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::RestartGame - restarting level (not implemented)"));
 	// commonly you would call UGameplayStatics::OpenLevel
 }
 
-void AGM_AdventureMode::PauseGame(bool bPause)
+void AGM_SVGLND_GameMode::PauseGame(bool bPause)
 {
 	bGamePaused = bPause;
 	GetWorldSettings()->SetTimeDilation(bPause ? 0.0f : 1.0f);
@@ -95,7 +95,7 @@ void AGM_AdventureMode::PauseGame(bool bPause)
 	// update HUD on each local player controller if possible
 	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 	{
-		if (APC_AdventureController *Adv = Cast<APC_AdventureController>(*It))
+		if (APC_SVGLND_PlayerController *Adv = Cast<APC_SVGLND_PlayerController>(*It))
 		{
 			if (Adv->HUDWidget)
 			{
@@ -111,18 +111,18 @@ void AGM_AdventureMode::PauseGame(bool bPause)
 	}
 }
 
-bool AGM_AdventureMode::GetIsGameOver() const
+bool AGM_SVGLND_GameMode::GetIsGameOver() const
 {
 	return bGameOver;
 }
 
-void AGM_AdventureMode::SetGameOver(bool bGameOverState)
+void AGM_SVGLND_GameMode::SetGameOver(bool bGameOverState)
 {
 	bGameOver = bGameOverState;
 
 	if (bGameOver)
 	{
-		UE_LOG(LogTemp, Log, TEXT("AGM_AdventureMode::SetGameOver - game over state entered"));
+		UE_LOG(LogTemp, Log, TEXT("AGM_SVGLND_GameMode::SetGameOver - game over state entered"));
 		// rudimentary input block
 		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 		{
@@ -134,7 +134,7 @@ void AGM_AdventureMode::SetGameOver(bool bGameOverState)
 	}
 }
 
-float AGM_AdventureMode::GetDifficultyMultiplier() const
+float AGM_SVGLND_GameMode::GetDifficultyMultiplier() const
 {
 	// Convert difficulty index to multiplier
 	switch (CurrentDifficulty)
@@ -146,7 +146,7 @@ float AGM_AdventureMode::GetDifficultyMultiplier() const
 	}
 }
 
-void AGM_AdventureMode::SetDifficulty(int32 NewDifficulty)
+void AGM_SVGLND_GameMode::SetDifficulty(int32 NewDifficulty)
 {
 	CurrentDifficulty = FMath::Max(0, FMath::Min(2, NewDifficulty));
 	DamageMultiplier = GetDifficultyMultiplier();
@@ -156,29 +156,29 @@ void AGM_AdventureMode::SetDifficulty(int32 NewDifficulty)
 	// TODO: Update HUD difficulty indicator
 }
 
-void AGM_AdventureMode::ToggleHUDVisibility()
+void AGM_SVGLND_GameMode::ToggleHUDVisibility()
 {
 	bHUDVisible = !bHUDVisible;
 
 	// TODO: Show/hide HUD widget
 }
 
-bool AGM_AdventureMode::GetHUDVisible() const
+bool AGM_SVGLND_GameMode::GetHUDVisible() const
 {
 	return bHUDVisible;
 }
 
-APC_AdventureController* AGM_AdventureMode::GetAdventurePlayerController() const
+APC_SVGLND_PlayerController* AGM_SVGLND_GameMode::GetAdventurePlayerController() const
 {
-	// TODO: Properly cast GetGameMode()->GetPrimaryPlayerController() to APC_AdventureController
+	// TODO: Properly cast GetGameMode()->GetPrimaryPlayerController() to APC_SVGLND_PlayerController
 	// Simplified: return nullptr as placeholder
 	return nullptr;
 }
 
-ACBP_AdventureCharacter* AGM_AdventureMode::GetAdventureCharacter() const
+ACBP_AdventureCharacter* AGM_SVGLND_GameMode::GetAdventureCharacter() const
 {
 	// TODO: Return player pawn as ACBP_AdventureCharacter
-	APC_AdventureController* PC = GetAdventurePlayerController();
+	APC_SVGLND_PlayerController* PC = GetAdventurePlayerController();
 	if (PC)
 	{
 		return Cast<ACBP_AdventureCharacter>(PC->GetPawn());
@@ -186,7 +186,7 @@ ACBP_AdventureCharacter* AGM_AdventureMode::GetAdventureCharacter() const
 	return nullptr;
 }
 
-void AGM_AdventureMode::PlayGameAudioEvent(FGameplayTag AudioTag, float VolumeMultiplier)
+void AGM_SVGLND_GameMode::PlayGameAudioEvent(FGameplayTag AudioTag, float VolumeMultiplier)
 {
 	// TODO: Play global audio event
 }

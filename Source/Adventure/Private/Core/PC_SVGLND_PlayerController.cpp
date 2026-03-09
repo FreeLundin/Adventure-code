@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 // Adventure Project - Core Player Controller Implementation
 
-#include "Core/PC_AdventureController.h"
+#include "Core/PC_SVGLND_PlayerController.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Character/CBP_AdventureCharacter.h"
@@ -17,7 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "AIController.h"
 
-APC_AdventureController::APC_AdventureController()
+APC_SVGLND_PlayerController::APC_SVGLND_PlayerController()
 {
 	// Initialize input settings
 	LookSensitivity = 1.0f;
@@ -32,7 +32,7 @@ APC_AdventureController::APC_AdventureController()
 	bGamePaused = false;
 }
 
-void APC_AdventureController::BeginPlay()
+void APC_SVGLND_PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -55,7 +55,7 @@ void APC_AdventureController::BeginPlay()
 	}
 }
 
-void APC_AdventureController::OnPossess(APawn *InPawn)
+void APC_SVGLND_PlayerController::OnPossess(APawn *InPawn)
 {
 	Super::OnPossess(InPawn);
 
@@ -103,7 +103,7 @@ void APC_AdventureController::OnPossess(APawn *InPawn)
 	}
 }
 
-void APC_AdventureController::OnUnPossess()
+void APC_SVGLND_PlayerController::OnUnPossess()
 {
 	// Cleanup Enhanced Input
 	TeardownEnhancedInput();

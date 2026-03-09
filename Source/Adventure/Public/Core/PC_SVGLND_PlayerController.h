@@ -59,7 +59,7 @@ class UAbilitySystemComponent;
  * @see WB_HUD for main gameplay interface
  */
 UCLASS(Blueprintable, BlueprintType)
-class ADVENTURE_API APC_AdventureController : public APlayerController
+class ADVENTURE_API APC_SVGLND_PlayerController : public APlayerController
 {
 	GENERATED_BODY()
 

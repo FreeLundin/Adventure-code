@@ -18,7 +18,7 @@
 #include "CBP_AdventureCharacter.generated.h"
 
 class APlayerController;
-class APC_AdventureController;
+class APC_SVGLND_PlayerController;
 class UAbilitySystemComponent;
 class UGameplayAbility;
 class UGameplayEffect;
@@ -81,7 +81,7 @@ public:
 	UCharacterMovementComponent *CachedCharMovement;
 
 	UPROPERTY()
-	class APC_AdventureController *CachedAdventureController;
+	class APC_SVGLND_PlayerController *CachedAdventureController;
 	// ===== GAS INITIALIZATION =====
 
 	virtual void PossessedBy(AController *NewController) override;

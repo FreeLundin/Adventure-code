@@ -1,16 +1,14 @@
-/.azure
 /.git
 /.github
-/.vs
 /.vscode
 /AI
-/Content
-/DerivedDataCache
+/Automation
 /Design Document
 /Documentation
 /infra
 /Intermediate
 /runbooks
 /Saved
+/scripts
 /Tools
 /Utilities

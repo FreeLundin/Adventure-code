@@ -115,7 +115,7 @@ void ACBP_AdventureCharacter::SetupInput()
 	// cache controller as our custom AdventureController type
 	if (Controller && !CachedAdventureController)
 	{
-		CachedAdventureController = Cast<APC_AdventureController>(Controller);
+		CachedAdventureController = Cast<APC_SVGLND_PlayerController>(Controller);
 	}
 
 	// Allow this pawn to tick if we are locally controlled (input will arrive)
