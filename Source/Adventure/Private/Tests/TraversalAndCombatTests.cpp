@@ -148,4 +148,25 @@ bool FParryAttackTest::RunTest(const FString &Parameters)
     return true;
 }
 
+// ---------------------------------------------------------------------
+// enemy class smoke tests
+// ---------------------------------------------------------------------
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEnemyClassesTest, "SVGLND.AI.EnemyClasses", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FEnemyClassesTest::RunTest(const FString &Parameters)
+{
+    AEnemyBase *Base = NewObject<AEnemyBase>();
+    TestNotNull(TEXT("Base enemy created"), Base);
+
+    AEnemyMutantRusher *Rusher = NewObject<AEnemyMutantRusher>();
+    TestNotNull(TEXT("Mutant rusher created"), Rusher);
+    TestTrue(TEXT("Rusher uses reduced health"), Rusher->Health < 100.f);
+
+    AEnemyCultist *Cult = NewObject<AEnemyCultist>();
+    TestNotNull(TEXT("Cultist created"), Cult);
+    TestTrue(TEXT("Cultist default speed set"), Cult->GetCharacterMovement()->MaxWalkSpeed > 0.f);
+
+    return true;
+}
+
 #endif // WITH_DEV_AUTOMATION_TESTS
