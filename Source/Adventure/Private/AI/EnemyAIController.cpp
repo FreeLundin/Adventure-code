@@ -20,13 +20,18 @@ void AEnemyAIController::Tick(float DeltaSeconds)
     if (PlayerChar)
     {
         const float Dist = FVector::Dist(Controlled->GetActorLocation(), PlayerChar->GetActorLocation());
-        // if very close, dash faster
+        // if within charge range, increase speed and attempt to damage
         float Acceptance = 100.0f;
         float SpeedFactor = 1.0f;
-        if (Dist < 500.0f)
+        if (Dist < 300.0f)
         {
-            Acceptance = 50.0f;
-            SpeedFactor = 2.0f;
+            Acceptance = 20.0f;
+            SpeedFactor = 3.0f;
+            // apply damage if we overlap the player
+            if (Dist < 100.0f)
+            {
+                UGameplayStatics::ApplyDamage(PlayerChar, 10.0f, this, Controlled, nullptr);
+            }
         }
         MoveToActor(PlayerChar, Acceptance, true, true, true, 0, true);
         if (ACharacter* Ch = Cast<ACharacter>(Controlled))
