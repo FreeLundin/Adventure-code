@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 // Adventure Project - Core Player Controller Implementation
 
-#include "Core/PC_AdventureController.h"
+#include "Core/PC_SVGLND_PlayerController.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
 #include "Character/CBP_AdventureCharacter.h"
@@ -14,8 +14,10 @@
 #include "GAS/AdventureAttributeSet.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "InputActionValue.h"
+#include "Kismet/GameplayStatics.h"
+#include "AIController.h"
 
-APC_AdventureController::APC_AdventureController()
+APC_SVGLND_PlayerController::APC_SVGLND_PlayerController()
 {
 	// Initialize input settings
 	LookSensitivity = 1.0f;
@@ -30,7 +32,7 @@ APC_AdventureController::APC_AdventureController()
 	bGamePaused = false;
 }
 
-void APC_AdventureController::BeginPlay()
+void APC_SVGLND_PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -53,7 +55,7 @@ void APC_AdventureController::BeginPlay()
 	}
 }
 
-void APC_AdventureController::OnPossess(APawn *InPawn)
+void APC_SVGLND_PlayerController::OnPossess(APawn *InPawn)
 {
 	Super::OnPossess(InPawn);
 
@@ -101,7 +103,7 @@ void APC_AdventureController::OnPossess(APawn *InPawn)
 	}
 }
 
-void APC_AdventureController::OnUnPossess()
+void APC_SVGLND_PlayerController::OnUnPossess()
 {
 	// Cleanup Enhanced Input
 	TeardownEnhancedInput();
@@ -137,10 +139,51 @@ void APC_AdventureController::SetupEnhancedInput()
 		if (UEnhancedInputLocalPlayerSubsystem *Subsys = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
 			// load mapping context asset (should be set in blueprint or via config)
-			if (InputMappingContext)
+			if (DefaultInputMappingContext)
 			{
-				Subsys->AddMappingContext(InputMappingContext, 0);
+				Subsys->AddMappingContext(DefaultInputMappingContext, 0);
 			}
+		}
+	}
+
+	// bind individual actions once InputComponent has been created
+	if (UEnhancedInputComponent *EIC = Cast<UEnhancedInputComponent>(InputComponent))
+	{
+		if (IA_Move)
+		{
+			EIC->BindAction(IA_Move, ETriggerEvent::Triggered, this, &APC_AdventureController::OnMoveInput);
+		}
+		if (IA_Look)
+		{
+			EIC->BindAction(IA_Look, ETriggerEvent::Triggered, this, &APC_AdventureController::OnLookInput);
+		}
+		if (IA_Sprint)
+		{
+			EIC->BindAction(IA_Sprint, ETriggerEvent::Started, this, &APC_AdventureController::OnSprintInput);
+		}
+		if (IA_Dodge)
+		{
+			EIC->BindAction(IA_Dodge, ETriggerEvent::Started, this, &APC_AdventureController::OnDodgeInput);
+		}
+		if (IA_AttackLight)
+		{
+			EIC->BindAction(IA_AttackLight, ETriggerEvent::Started, this, &APC_AdventureController::OnAbilityInput_Light);
+		}
+		if (IA_AttackHeavy)
+		{
+			EIC->BindAction(IA_AttackHeavy, ETriggerEvent::Started, this, &APC_AdventureController::OnAbilityInput_Heavy);
+		}
+		if (IA_Interact)
+		{
+			EIC->BindAction(IA_Interact, ETriggerEvent::Started, this, &APC_AdventureController::OnInteractInput);
+		}
+		if (IA_CameraToggle)
+		{
+			EIC->BindAction(IA_CameraToggle, ETriggerEvent::Started, this, &APC_AdventureController::OnCameraToggleInput);
+		}
+		if (IA_Pause)
+		{
+			EIC->BindAction(IA_Pause, ETriggerEvent::Started, this, &APC_AdventureController::OnPauseInput);
 		}
 	}
 }
@@ -165,9 +208,18 @@ void APC_AdventureController::OnMoveInput(const FInputActionValue &Value)
 
 void APC_AdventureController::OnLookInput(const FInputActionValue &Value)
 {
-	// TODO (TODO-CAMERA-SMOOTH): Update camera rotation based on look input
-	const FVector2D LookVector = Value.Get<FVector2D>();
-	// TODO (TODO-CAMERA-SMOOTH): Apply sensitivity and inversion settings
+	FVector2D LookVector = Value.Get<FVector2D>();
+
+	// apply sensitivity and inversion
+	LookVector *= LookSensitivity;
+	if (bInvertYAxis)
+	{
+		LookVector.Y *= -1.0f;
+	}
+
+	// rotate controller (affects camera)
+	AddYawInput(LookVector.X);
+	AddPitchInput(LookVector.Y);
 
 	if (CachedAdventureMover)
 	{
@@ -293,9 +345,30 @@ void APC_AdventureController::SetGamePaused(bool bPause)
 {
 	bGamePaused = bPause;
 
-	// TODO: Update game world time dilation
-	// TODO: Update HUD pause menu visibility
-	// TODO: Disable/enable AI
+	// update world pause state
+	if (UWorld *W = GetWorld())
+	{
+		UGameplayStatics::SetGamePaused(W, bPause);
+	}
+
+	// notify HUD
+	if (HUDWidget)
+	{
+		HUDWidget->SetPauseMenuVisible(bGamePaused);
+	}
+
+	// simple AI toggle: pause all AI controllers
+	if (UWorld *W2 = GetWorld())
+	{
+		for (TActorIterator<AAIController> It(W2); It; ++It)
+		{
+			AAIController *AI = *It;
+			if (AI)
+			{
+				AI->SetPause(bGamePaused);
+			}
+		}
+	}
 }
 
 // helper struct for camera parameters

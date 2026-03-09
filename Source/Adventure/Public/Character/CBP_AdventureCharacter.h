@@ -18,7 +18,7 @@
 #include "CBP_AdventureCharacter.generated.h"
 
 class APlayerController;
-class APC_AdventureController;
+class APC_SVGLND_PlayerController;
 class UAbilitySystemComponent;
 class UGameplayAbility;
 class UGameplayEffect;
@@ -81,7 +81,7 @@ public:
 	UCharacterMovementComponent *CachedCharMovement;
 
 	UPROPERTY()
-	class APC_AdventureController *CachedAdventureController;
+	class APC_SVGLND_PlayerController *CachedAdventureController;
 	// ===== GAS INITIALIZATION =====
 
 	virtual void PossessedBy(AController *NewController) override;
@@ -568,9 +568,6 @@ public:
 	/**
 	 * Result of most recent traversal check; replicated to clients using OnRep_TraversalResult.
 	 * Contains montage selection, motion warp targets, and traversal metadata.
-	 *
-	 * TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
-	 *   DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, TraversalResult, COND_SimulatedOnly);
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Traversal", ReplicatedUsing = "OnRep_TraversalResult")
 	FS_TraversalCheckResult TraversalResult;
@@ -584,9 +581,6 @@ public:
 	/**
 	 * Replicated input state containing movement, look, and ability activation flags.
 	 * Synchronized across network to enable server-side input validation.
-	 *
-	 * TODO (TODO-REPLICATION): Add to GetLifetimeReplicatedProps:
-	 *   DOREPLIFETIME_WITH_PARAMS(ACBP_AdventureCharacter, CharacterInputState, COND_SkipOwner);
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Input", Replicated)
 	FCharacterInputState CharacterInputState;

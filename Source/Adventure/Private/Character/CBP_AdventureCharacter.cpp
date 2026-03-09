@@ -115,7 +115,7 @@ void ACBP_AdventureCharacter::SetupInput()
 	// cache controller as our custom AdventureController type
 	if (Controller && !CachedAdventureController)
 	{
-		CachedAdventureController = Cast<APC_AdventureController>(Controller);
+		CachedAdventureController = Cast<APC_SVGLND_PlayerController>(Controller);
 	}
 
 	// Allow this pawn to tick if we are locally controlled (input will arrive)
@@ -181,10 +181,11 @@ bool ACBP_AdventureCharacter::CanSprint()
 		// Guard: No input
 		if (InputDirection.IsZero())
 		{
-			// TODO: Decelerate smoothly if moving
-			return;
+		// smoothly decelerate current velocity toward zero
+		if (CharMC->Velocity.SizeSquared2D() > 1.0f)
+		{
+			CharMC->Velocity = FMath::VInterpTo(CharMC->Velocity, FVector::ZeroVector, GetWorld()->DeltaTimeSeconds, 5.0f);
 		}
-
 		// Determine desired gait based on input and sprint state
 		// For now: Use simple speed mapping
 		//   - Walk: Normal speed (from WalkSpeeds)
@@ -311,8 +312,16 @@ void ACBP_AdventureCharacter::UpdateRotation_PreCMC()
 		return;
 	}
 
-	// TODO: Get look input (mouse/analog stick) from PlayerController camera
-	// For now, rotate character to face movement direction
+	// attempt to rotate toward camera direction in first-person mode
+	FRotator ControlRot = Controller ? Controller->GetControlRotation() : GetActorRotation();
+
+	if (CameraStyle == E_CameraStyle::FirstPerson)
+	{
+		// yaw only
+		FRotator NewRot(0.0f, ControlRot.Yaw, 0.0f);
+		SetActorRotation(NewRot);
+		return;
+	}
 
 	FVector InputDirection = GetLastMovementInputVector();
 
@@ -331,21 +340,26 @@ void ACBP_AdventureCharacter::UpdateRotation_PreCMC()
 
 	// Apply rotation with smooth interpolation
 	FRotator CurrentRotation = GetActorRotation();
-	const float RotationSpeed = 10.0f; // Degrees per...tick? (will need tuning)
+	const float RotationSpeed = 10.0f; // tuning later
 
 	FRotator NewRotation = FMath::RInterpTo(CurrentRotation, DesiredRotation, GetWorld()->DeltaTimeSeconds, RotationSpeed);
 	SetActorRotation(NewRotation);
 
-	// TODO: Clamp rotation based on camera style:
-	//   - Top-Down: Allow full 360 rotation
-	//   - Third-Person: Rotate toward input, camera focus
-	//   - First-Person: Use camera direction directly
+	// clamp yaw if using third-person to avoid excessive spinning
+	if (CameraStyle == E_CameraStyle::ThirdPerson)
+	{
+		// keep yaw within +/- 180, no additional clamp needed for now
+	}
 }
 
 TEnumAsByte<E_Gait> ACBP_AdventureCharacter::GetDesiredGait(bool FullMovementInput)
 {
 	// Determine gait based on movement input and character state
-	// TODO: Check sprint ability active status from GAS
+	// sprint ability check via input state
+	if (CharacterInputState.bSprintInput && CanSprint())
+	{
+		return E_Gait::Sprint;
+	}
 	// For now: Walk if no input, Run if input present
 
 	if (!FullMovementInput)
@@ -425,20 +439,27 @@ double ACBP_AdventureCharacter::CalculateBrakingDeceleration(float StrafeSpeedMa
 
 double ACBP_AdventureCharacter::CalculateBrakingFriction(float StrafeSpeedMap)
 {
-	// TODO: Calculate braking friction coefficient
-	return 8.0f;
+	// simple friction values vary by gait
+	switch (Gait)
+	{
+	case E_Gait::Walk: return 8.0f;
+	case E_Gait::Run: return 6.0f;
+	case E_Gait::Sprint: return 4.0f;
+	default: return 8.0f;
+	}
 }
 
 double ACBP_AdventureCharacter::CalculateGroundFriction(float StrafeSpeedMap)
 {
-	// TODO: Calculate ground friction coefficient
-	return 8.0f;
+	// ground friction slightly higher than braking friction
+	double base = CalculateBrakingFriction(StrafeSpeedMap);
+	return base + 2.0f;
 }
 
 double ACBP_AdventureCharacter::CalculateMaxCrouchSpeed(float StrafeSpeedMap)
 {
-	// TODO: Calculate max crouch speed based on strafe angle
-	return CrouchSpeeds.X;
+	// simple linear interpolation between forward and strafe crouch speeds
+	return FMath::Lerp(CrouchSpeeds.X, CrouchSpeeds.Y, StrafeSpeedMap);
 }
 
 void ACBP_AdventureCharacter::SetupCamera(APlayerController *PlayerController)

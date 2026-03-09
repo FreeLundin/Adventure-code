@@ -1,8 +1,12 @@
-# Git LFS for Unreal binary assets
-*.uasset filter=lfs diff=lfs merge=lfs -text
-*.umap filter=lfs diff=lfs merge=lfs -text
-*.ubulk filter=lfs diff=lfs merge=lfs -text
-*.uexp filter=lfs diff=lfs merge=lfs -text
-*.utexture filter=lfs diff=lfs merge=lfs -text
-*.uplugin filter=lfs diff=lfs merge=lfs -text
+# NOTE: this project does not use Git LFS; keep binary assets in the repo directly.
+# The lines below were historically used for LFS but have been removed per policy.
+#
+# *.uasset filter=lfs diff=lfs merge=lfs -text
+# *.umap  filter=lfs diff=lfs merge=lfs -text
+# *.ubulk filter=lfs diff=lfs merge=lfs -text
+# *.uexp  filter=lfs diff=lfs merge=lfs -text
+# *.utexture filter=lfs diff=lfs merge=lfs -text
+# *.uplugin filter=lfs diff=lfs merge=lfs -text
+
 *.uproject text eol=lf
+

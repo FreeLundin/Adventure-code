@@ -41,4 +41,8 @@ public:
     /** Update ammo count or similar. */
     UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
     void SetAmmo(int32 CurrentAmmo, int32 MaxAmmo);
+
+    /** Show/hide pause menu overlay */
+    UFUNCTION(BlueprintImplementableEvent, Category = "HUD")
+    void SetPauseMenuVisible(bool bVisible);
 };

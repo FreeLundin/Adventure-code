@@ -181,17 +181,9 @@ To support development and profiling we will integrate the following tools into 
 
 - **Nsight Graphics/Compute/Systems** – GPU and system profilers for performance tuning. Install on all windows workstations and add to the engine's plugin list; capture traces nightly as part of CI smoke tests.
 - **Microsoft 365** – Teams for chat/video, Planner for sprint tasks, OneDrive for shared documents, Power Automate for GitHub notifications. Establish project team and channel during M0.
-- **Approach with official Unreal plugins only** – avoid third‑party/experimental plugins where possible. When a feature is needed (e.g. motion matching, USD support, animation retargeting) prefer the versions distributed and supported by Epic through the Marketplace or the engine source. Official plugins often include better integration, up‑to‑date documentation, and long‑term support.  A whitelist of approved project plugins is maintained in `Documentation/ApprovedPlugins.txt`; the CI pipeline runs a validation script to ensure no unapproved plugins are added.
+- **NVIDIA Omniverse** (optional) – evaluate during M1; proof‑of‑concept live‑sync between Maya/Blender and Unreal. Nucleus server may be hosted on the build network.
 
 These tools are not required for the game logic itself, but will be standard across the studio and should be included in onboarding documentation.
-
-> **Other useful tooling**
-> * RenderDoc / NVIDIA Nsight Graphics for frame captures (alternative to Nsight extension).
-> * PIX (Windows GPU/CPU capture) for low‑level debugging on Xbox/PC.
-> * Visual Studio Profiler & concurrency visualizer for CPU hotspots.
-> * GitHub Projects / GitHub CLI for issue/task management.
-> * A good Diff/merge tool (WinMerge, BeyondCompare) for resolving large binary assets when LFS is not used.
-> * Portable build farm scripts (PowerShell/azd) for consistent environment setup.
 
 ---
 

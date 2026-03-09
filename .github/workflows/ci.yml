@@ -31,3 +31,27 @@ jobs:
           $gen = git ls-files "*.generated.h" || $null
           if ($gen) { Write-Host "Committed generated headers:\n$gen"; $errors = $true }
           if ($errors) { Write-Error "Lint failures detected" }
+      - name: Verify project plugins
+        run: |
+          python scripts/verify_plugins.py
+      - name: Generate animation manifest
+        shell: pwsh
+        run: |
+          Write-Host "Running motion matching pipeline..."
+          python Automation/motion_matching_pipeline.py
+      - name: Upload animation data
+        uses: actions/upload-artifact@v3
+        with:
+          name: anim-manifest
+          path: |
+            Saved/AnimManifest.csv
+            Saved/*_frames.csv
+      - name: Compare manifest to baseline
+        shell: pwsh
+        run: |
+          if (Test-Path Automation\AnimManifestBaseline.csv) {
+            $diff = Compare-Object (Get-Content Saved\AnimManifest.csv) (Get-Content Automation\AnimManifestBaseline.csv)
+            if ($diff) { Write-Error "Animation manifest differs from baseline" }
+          } else {
+            Write-Host "No baseline file, skipping diff."
+          }

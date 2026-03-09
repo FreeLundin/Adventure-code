@@ -6,14 +6,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "Core/AdventureTypes.h"
-#include "GM_AdventureMode.generated.h"
+#include "GM_SVGLND_GameMode.generated.h"
 
 class APC_SVGLND_PlayerController;
 class ACBP_AdventureCharacter;
 class ACBP_AdventureCharacter_Mover;
 
 /**
- * AGM_AdventureMode
+ * AGM_SVGLND_GameMode
  * 
  * Core game mode for the Adventure prototype (Phase 1+).
  * Handles:
@@ -38,7 +38,7 @@ class ACBP_AdventureCharacter_Mover;
  *   - Track and broadcast game state changes
  * 
  * Usage:
- *   1. Set AGM_AdventureMode as GameMode class in Project Settings or level Blueprint
+ *   1. Set AGM_SVGLND_GameMode as GameMode class in Project Settings or level Blueprint
  *   2. Configure default spawning behavior and player controller class
  *   3. Tune level-specific parameters (difficulty, enemy counts, resource amounts)
  *   4. Integrate with SaveGame system for progression persistence
@@ -48,12 +48,12 @@ class ACBP_AdventureCharacter_Mover;
  * @see UGASAttributeSet for attribute initialization
  */
 UCLASS(Blueprintable, BlueprintType)
-class ADVENTURE_API AGM_AdventureMode : public AGameModeBase
+class ADVENTURE_API AGM_SVGLND_GameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-	AGM_AdventureMode();
+	AGM_SVGLND_GameMode();
 
 	// ===== GAME INITIALIZATION =====
 

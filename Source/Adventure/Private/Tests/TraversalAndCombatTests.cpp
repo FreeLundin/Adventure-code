@@ -3,7 +3,7 @@
 #include "GAS/AdventureGameplayTags.h"
 #include "GAS/AdventureAttributeSet.h"
 #include "Core/AdventurePlayerState.h"
-#include "Core/PC_AdventureController.h"
+#include "Core/PC_SVGLND_PlayerController.h"
 #include "Character/CBP_AdventureCharacter.h"
 #include "Components/AdventureGASStateTreeBridgeComponent.h"
 #include "AbilitySystemComponent.h"
@@ -34,7 +34,7 @@ bool FClimbBasicTest::RunTest(const FString &Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatBlockedDuringTraversalTest, "SVGLND.Combat.BlockedDuringTraversal", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FCombatBlockedDuringTraversalTest::RunTest(const FString &Parameters)
 {
-    APC_AdventureController *Controller = NewObject<APC_AdventureController>();
+    APC_SVGLND_PlayerController *Controller = NewObject<APC_SVGLND_PlayerController>();
     Controller->CachedAbilitySystemComponent = CreateTestASC();
 
     Controller->SetTraversalOverride(true);
@@ -51,15 +51,15 @@ bool FCombatBlockedDuringTraversalTest::RunTest(const FString &Parameters)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraToggleTest, "SVGLND.Camera.Toggle", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FCameraToggleTest::RunTest(const FString &Parameters)
 {
-    APC_AdventureController *Controller = NewObject<APC_AdventureController>();
+    APC_SVGLND_PlayerController *Controller = NewObject<APC_SVGLND_PlayerController>();
     TestEqual(TEXT("Initial camera style index"), Controller->GetCurrentCameraStyle(), 1);
     return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCameraSmoothTest, "SVGLND.Camera.SmoothTransition", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+IMPLEMENT_SIMPLE_AUTomation_TEST(FCameraSmoothTest, "SVGLND.Camera.SmoothTransition", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FCameraSmoothTest::RunTest(const FString &Parameters)
 {
-    APC_AdventureController *Controller = NewObject<APC_AdventureController>();
+    APC_SVGLND_PlayerController *Controller = NewObject<APC_SVGLND_PlayerController>();
     Controller->CycleCamera();
     return true;
 }
@@ -145,6 +145,27 @@ bool FParryAttackTest::RunTest(const FString &Parameters)
     Ability->ActivateAbility(FGameplayAbilitySpecHandle(), &ActorInfo, FGameplayAbilityActivationInfo(), nullptr);
     float After = ASC->GetNumericAttribute(UAdventureAttributeSet::GetRitualEnergyAttribute());
     TestTrue(TEXT("Ritual energy increased by at least 5"), After >= Before + 5.0f);
+    return true;
+}
+
+// ---------------------------------------------------------------------
+// enemy class smoke tests
+// ---------------------------------------------------------------------
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FEnemyClassesTest, "SVGLND.AI.EnemyClasses", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FEnemyClassesTest::RunTest(const FString &Parameters)
+{
+    AEnemyBase *Base = NewObject<AEnemyBase>();
+    TestNotNull(TEXT("Base enemy created"), Base);
+
+    AEnemyMutantRusher *Rusher = NewObject<AEnemyMutantRusher>();
+    TestNotNull(TEXT("Mutant rusher created"), Rusher);
+    TestTrue(TEXT("Rusher uses reduced health"), Rusher->Health < 100.f);
+
+    AEnemyCultist *Cult = NewObject<AEnemyCultist>();
+    TestNotNull(TEXT("Cultist created"), Cult);
+    TestTrue(TEXT("Cultist default speed set"), Cult->GetCharacterMovement()->MaxWalkSpeed > 0.f);
+
     return true;
 }
 
